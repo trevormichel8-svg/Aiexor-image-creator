@@ -42,3 +42,84 @@ img {
   margin-top: 20px;
   border-radius: 8px;
     }
+
+/* ===========================
+   AIEXOR THEME EXTENSIONS
+   =========================== */
+
+:root {
+  --gold: #c9a24d;
+  --turquoise: #1ddacb;
+  --bg-panel: rgba(255,255,255,0.06);
+  --border-glass: rgba(255,255,255,0.12);
+  --text-muted: #9aa4b2;
+}
+
+/* Glass panels */
+.glass {
+  background: var(--bg-panel);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-glass);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+}
+
+/* Buttons (upgrade existing) */
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold), var(--turquoise));
+  color: #0b0f14;
+  font-weight: 600;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: none;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 28px rgba(29,218,203,0.35);
+  transform: translateY(-1px);
+}
+
+/* Inputs */
+.input,
+textarea,
+select {
+  background: #111;
+  border-radius: 12px;
+}
+
+/* Image cards */
+.image-card {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+}
+
+.image-card img {
+  width: 100%;
+  display: block;
+}
+
+.image-card .meta {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 10px;
+  font-size: 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+  color: var(--text-muted);
+}
+
+/* Section text */
+.section-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.section-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  }
+    
