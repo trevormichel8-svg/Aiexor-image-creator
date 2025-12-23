@@ -1,19 +1,28 @@
 import "./globals.css";
-import "@/styles/theme.css";
 
 export const metadata = {
-  title: "Aiexor Image Creator",
-  description: "AI image generation powered by Aiexor"
+  title: "Aiexor.com",
+  description: "Let Your Imagination Run Wild.",
 };
 
 export default function RootLayout({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {/* BACKGROUND EFFECTS (MOBILE SAFE) */}
+        <div className="bg-effects">
+          <div className="particles" />
+          <div className="streak s1" />
+          <div className="streak s2" />
+          <div className="streak s3" />
+        </div>
+
+        {children}
+      </body>
     </html>
   );
 }
