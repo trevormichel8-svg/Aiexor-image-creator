@@ -75,7 +75,7 @@ export async function POST(req: Request) {
   /* 6️⃣ Save metadata to DB */
   const { error: dbError } = await supabase.from("images").insert({
     user_id: user.id,
-    prompt
+    prompt,
     model: MODEL_MAP,
     image_url: signed.signedUrl
   });
