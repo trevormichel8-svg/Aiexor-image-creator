@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const { prompt, provider } = parsed.data;
+  const { prompt } = parsed.data;
 
   /* 2️⃣ Get user */
   const {
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
   /* 3️⃣ Generate image */
   const result = await experimental_generateImage({
-    model: MODEL_MAP[provider],
+    model: MODEL_MAP,
     prompt,
     size: "1024x1024"
   });
@@ -75,9 +75,8 @@ export async function POST(req: Request) {
   /* 6️⃣ Save metadata to DB */
   const { error: dbError } = await supabase.from("images").insert({
     user_id: user.id,
-    prompt,
-    provider,
-    model: MODEL_MAP[provider],
+    prompt
+    model: MODEL_MAP,
     image_url: signed.signedUrl
   });
 
