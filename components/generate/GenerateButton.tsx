@@ -1,17 +1,17 @@
-type Props = {
+interface Props {
   loading: boolean;
-  onGenerate?: () => void;
-};
+  onGenerate: () => void;
+}
 
 export default function GenerateButton({ loading, onGenerate }: Props) {
   return (
     <button
-      type="button"
-      disabled={loading || !onGenerate}
       onClick={onGenerate}
-      className="w-full rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 py-3 font-semibold text-black shadow-lg transition hover:opacity-90 disabled:opacity-50"
+      disabled={loading}
+      className="w-full rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 px-6 py-3 font-semibold text-black transition hover:opacity-90 disabled:opacity-50"
     >
-      {loading ? "Generating..." : "Generate Image"}
+      {loading ? "Generating…" : "Generate Image"}
     </button>
   );
 }
+📱 Mobile-first
