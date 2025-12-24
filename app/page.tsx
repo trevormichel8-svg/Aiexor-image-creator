@@ -2,152 +2,173 @@
 
 import { useState } from "react";
 
-const styles = [
-  "None",
+type GeneratedImage = {
+  id: string;
+  url: string;
+  prompt: string;
+  style: string;
+};
+
+const ART_STYLES = [
   "Photorealistic",
+  "Cinematic",
   "Oil Painting",
   "Watercolor",
   "Charcoal Sketch",
   "Pencil Drawing",
   "Digital Painting",
   "Pixel Art",
-  "Low Poly 3D",
+  "Low Poly",
   "Line Art",
-  "Cartoon",
   "Anime",
-  "Manga Ink",
+  "Manga",
   "Cyberpunk",
   "Steampunk",
-  "Futuristic Sci-Fi",
-  "Fantasy Illustration",
+  "Sci-Fi",
+  "Fantasy",
   "Concept Art",
-  "Abstract Expressionism",
-  "Impressionism",
-  "Minimalism",
+  "Abstract",
+  "Minimalist",
+  "Surreal",
   "Pop Art",
-  "Cubism",
-  "Surrealism",
-  "Vector Art",
-  "Isometric",
-  "Flat Design",
-  "Matte Painting",
-  "Graffiti",
-  "Street Art",
-  "3D Render",
-  "Glitchcore",
+  "Ukiyo-e",
+  "Baroque",
+  "Renaissance",
+  "Noir",
   "Vaporwave",
   "Synthwave",
   "Dark Fantasy",
-  "Baroque",
-  "Renaissance",
-  "Ukiyo-e",
-  "Art Nouveau",
-  "Art Deco",
-  "Retro Futurism",
-  "Chiaroscuro",
-  "Ink Wash",
-  "Pastel Drawing",
-  "Realism",
-  "Expressionism",
-  "Psychedelic",
-  "Comic Book",
-  "Noir",
-  "Digital Collage",
-  "Photo Collage",
-  "Claymation",
-  "Stop Motion",
-  "Paper Cut",
+  "Isometric",
+  "Vector Art",
+  "Matte Painting",
+  "Graffiti",
   "Neon Glow",
   "Infrared",
   "Long Exposure",
-  "Macro Photography",
+  "Macro",
   "Cinematic Lighting",
-  "Studio Portrait",
   "Film Grain",
-  "Bokeh",
   "HDR",
-  "Lofi Aesthetic",
-  "Dreamcore",
-  "Cottagecore",
-  "Nature Photography",
-  "Wildlife Art",
-  "Landscape Painting",
-  "Seascape",
+  "Dreamlike",
+  "Lofi",
+  "Nature",
   "Space Art",
-  "Galaxy Scene",
-  "AI-Generated Abstract",
-  "Brush Stroke",
-  "Ink Pen",
-  "Stencil",
-  "Graffiti Marker",
+  "Galaxy",
+  "Fractal",
+  "Neural",
+  "Blueprint",
+  "Retro Futurism",
+  "Comic Book",
+  "Kawaii",
+  "Geometric",
   "Mixed Media",
   "Mosaic",
   "Stained Glass",
-  "Embroidery",
-  "Pixel Mosaic",
-  "Wireframe",
-  "Blueprint",
-  "Digital Wireframe",
-  "Retro Game",
-  "8-bit Art",
-  "16-bit Art",
-  "Comic Pop",
-  "Kawaii",
-  "Linework Tattoo",
-  "Geometric Pattern",
-  "Fractal Design",
-  "Neural Dream",
-  "AR/VR Hologram",
-  "Photobash",
-  "Real-Time Render",
-  "Motion Blur",
-  "AI Glow",
+  "8-bit",
+  "16-bit",
+  "Claymation",
+  "Stop Motion",
+  "Paper Cut",
+  "Glitch",
+  "Ink Wash",
+  "Pastel",
+  "Expressionism",
+  "Realism",
+  "Hyperrealism",
+  "Ultra Detailed",
+  "Studio Portrait",
+  "Cinematic Portrait",
+  "Wide Angle",
+  "Soft Focus",
+  "High Contrast",
+  "Moody Lighting",
+  "Epic Scale",
+  "Cosmic Horror",
+  "Astral",
+  "Celestial",
+  "Deep Space",
+  "Alien World",
+  "NASA Style",
+  "Sci-Fi Concept",
 ];
 
 export default function HomePage() {
   const [prompt, setPrompt] = useState("");
-  const [style, setStyle] = useState(styles[0]);
+  const [style, setStyle] = useState(ART_STYLES[0]);
+  const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState<GeneratedImage[]>([]);
 
-  const handleGenerate = () => {
-    const p = prompt.trim();
-    if (!p) return;
+  async function handleGenerate() {
+    if (!prompt.trim() || loading) return;
 
-    const finalPrompt = style === "None" ? p : `${p}, ${style}`;
-    // For now: verify it works
-    alert(`Generating:\n${finalPrompt}`);
-    console.log("Generate:", finalPrompt);
-  };
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          style,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data?.url) {
+        setImages((prev) => [
+          {
+            id: crypto.randomUUID(),
+            url: data.url,
+            prompt,
+            style,
+          },
+          ...prev,
+        ]);
+      }
+    } catch (err) {
+      console.error("Generation failed", err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <main className="min-h-screen flex flex-col items-center px-4 pt-24 pb-24">
-      <section className="w-full max-w-[420px] text-center mb-20">
-        <h1 className="text-[2.4rem] font-semibold leading-tight mb-8">
-          <span className="block gold-text mb-1">Aiexor.com</span>
-          <span className="block text-white">Let Your Imagination</span>
-          <span className="block gold-text">Run Wild.</span>
-        </h1>
-
-        <p className="text-sm text-gray-400 mb-14 leading-relaxed">
-          Turn your ideas into incredible AI art with Aiexor Image Creator powered by OpenAI.
-          <br />
-          Fast, easy, and limitless creativity at your fingertips.
-        </p>
-
-        <div className="glass glow-border rounded-2xl p-6">
-          <h3 className="font-semibold mb-4 text-left">GPT-Image 1.5</h3>
-
-          <div className="space-y-4">
-            <input
-              placeholder="Describe your image idea..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleGenerate();
-              }}
+    <main className="relative flex min-h-screen flex-col items-center px-4 pb-36">
+      {/* Image Feed */}
+      <div className="w-full max-w-3xl pt-10 space-y-10">
+        {images.map((img) => (
+          <div key={img.id} className="fade-in">
+            <p className="mb-2 text-sm text-gray-400">
+              {img.prompt} — <span className="italic">{img.style}</span>
+            </p>
+            <img
+              src={img.url}
+              alt={img.prompt}
+              className="w-full rounded-xl shadow-2xl"
             />
+          </div>
+        ))}
+      </div>
 
-            <select value={style} onChange={(e) => setStyle(e.target.value)}>
-              {styles.map((s) => (
+      {/* Prompt Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur border-t border-neutral-800">
+        <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe the image you want to create…"
+            rows={2}
+            className="w-full resize-none rounded-lg bg-neutral-900 px-4 py-3 text-white outline-none chrome-red"
+          />
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <select
+              value={style}
+              onChange={(e) => setStyle(e.target.value)}
+              className="flex-1 rounded-lg bg-neutral-900 px-3 py-2 text-white chrome-red"
+            >
+              {ART_STYLES.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
@@ -155,19 +176,19 @@ export default function HomePage() {
             </select>
 
             <button
-              className="btn-gold w-full py-3"
               onClick={handleGenerate}
-              disabled={!prompt.trim()}
-              style={{
-                opacity: prompt.trim() ? 1 : 0.6,
-                cursor: prompt.trim() ? "pointer" : "not-allowed",
-              }}
+              disabled={loading}
+              className="rounded-lg px-6 py-2 font-semibold text-black chrome-red-glow disabled:opacity-50"
             >
-              Generate Image
+              {loading ? "Generating…" : "Generate"}
             </button>
           </div>
+
+          <p className="text-xs text-gray-500 text-center">
+            Images generated using OpenAI
+          </p>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
