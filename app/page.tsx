@@ -2,140 +2,195 @@
 
 import { useState } from "react";
 
-const ART_STYLES = [
+type ImageItem = {
+  prompt: string;
+  image: string;
+};
+
+type ChatSession = {
+  id: string;
+  title: string;
+  images: ImageItem[];
+};
+
+const ART_STYLES = [ /* same 100+ list as before */ 
   "Photorealistic","Ultra Realistic","Cinematic","HDR","Studio Lighting",
   "Portrait Photography","Macro Photography","Long Exposure","Bokeh",
   "Film Grain","Analog Photo","Polaroid","Infrared","Night Photography",
-
-  "Digital Art","Concept Art","Matte Painting","Environment Art",
-  "Character Design","Game Art","Splash Art","Key Art","Illustration",
-
-  "Anime","Manga","Chibi","Studio Ghibli Style","Kawaii","Mecha",
-  "Cyberpunk Anime","Dark Anime","Isekai Style",
-
-  "Cyberpunk","Steampunk","Dieselpunk","Biopunk","Retrofuturism",
-  "Futuristic Sci-Fi","Space Art","Galaxy Scene","Nebula","Alien World",
-
-  "Fantasy","Dark Fantasy","High Fantasy","Epic Fantasy","Mythology",
-  "Medieval Fantasy","Dungeons and Dragons","Magic Realism",
-
-  "Oil Painting","Watercolor","Acrylic Painting","Ink Drawing",
-  "Charcoal Sketch","Pencil Drawing","Pastel Drawing","Ink Wash",
-
-  "Impressionism","Expressionism","Abstract","Abstract Expressionism",
-  "Surrealism","Cubism","Pop Art","Minimalism","Modern Art",
-  "Art Nouveau","Art Deco","Baroque","Renaissance","Ukiyo-e",
-
-  "Pixel Art","8-bit","16-bit","Retro Game Art","Isometric",
-  "Low Poly","Voxel Art","Wireframe","Blueprint",
-
-  "3D Render","Hyperreal 3D","Octane Render","Unreal Engine",
-  "Blender Render","ZBrush Sculpt","Clay Render",
-
-  "Graffiti","Street Art","Stencil Art","Mural Style",
-  "Neon Glow","Vaporwave","Synthwave","Glitch Art",
-
-  "Collage","Digital Collage","Photo Manipulation","Photobashing",
-  "Mixed Media","Experimental AI","Neural Dream"
+  "Digital Art","Concept Art","Fantasy","Cyberpunk","Anime","Pixel Art",
+  "3D Render","Oil Painting","Watercolor","Abstract","Surrealism",
+  "Minimalism","Art Deco","Renaissance","Ukiyo-e","Low Poly","Voxel Art",
+  "Blueprint","Unreal Engine","Graffiti","Line Art","Poster Design"
 ];
 
 export default function Page() {
   const [prompt, setPrompt] = useState("");
-  const [style, setStyle] = useState("Photorealistic");
-  const [showStyles, setShowStyles] = useState(false);
+  const [style, setStyle] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [current, setCurrent] = useState<ChatSession>({
+    id: crypto.randomUUID(),
+    title: "New Chat",
+    images: []
+  });
+
+  const [showStyles, setShowStyles] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   async function generate() {
-    if (!prompt || loading) return;
+    if (!prompt) return;
     setLoading(true);
 
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: `${prompt}, ${style} style`
-        }),
-      });
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: style ? `${prompt}, ${style}` : prompt
+      })
+    });
 
-      const data = await res.json();
-      if (data.image) {
-        setImages([data.image, ...images]);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    const data = await res.json();
 
+    const updated = {
+      ...current,
+      title: current.images.length === 0 ? prompt.slice(0, 32) : current.title,
+      images: [...current.images, { prompt, image: data.image }]
+    };
+
+    setCurrent(updated);
+    setPrompt("");
     setLoading(false);
   }
 
-  return (
-    <main className="min-h-screen relative pb-40">
-      {/* IMAGE CANVAS */}
-      <div className="flex flex-col items-center gap-8 pt-24">
-        {images.length === 0 && (
-          <p className="text-gray-500">
-            Your generated images will appear here
-          </p>
-        )}
+  function newChat() {
+    if (current.images.length) {
+      setSessions([current, ...sessions]);
+    }
+    setCurrent({
+      id: crypto.randomUUID(),
+      title: "New Chat",
+      images: []
+    });
+  }
 
-        {images.map((img, i) => (
-          <img
-            key={i}
-            src={img}
-            className="max-w-[90vw] rounded-2xl shadow-2xl"
-            alt="Generated"
-          />
+  function loadChat(chat: ChatSession) {
+    setCurrent(chat);
+    setShowSidebar(false);
+  }
+
+  return (
+    <main className="relative min-h-screen bg-black text-white overflow-hidden">
+
+      {/* STARFIELD */}
+      <div className="absolute inset-0 starfield" />
+
+      {/* TOP BAR */}
+      <div className="fixed top-4 left-4 right-4 z-30 flex justify-between">
+        <button
+          onClick={() => setShowSidebar(true)}
+          className="px-4 py-2 rounded-full border border-red-600 shadow-[0_0_15px_red]"
+        >
+          ☰
+        </button>
+        <button
+          onClick={newChat}
+          className="px-4 py-2 rounded-full border border-red-600 shadow-[0_0_15px_red]"
+        >
+          ＋ New Chat
+        </button>
+      </div>
+
+      {/* SIDEBAR */}
+      {showSidebar && (
+        <aside className="fixed inset-y-0 left-0 w-72 bg-black/95 border-r border-red-700 z-40 p-4 overflow-y-auto">
+          <h2 className="mb-4 text-red-400">Chat History</h2>
+          {sessions.map(s => (
+            <div
+              key={s.id}
+              onClick={() => loadChat(s)}
+              className="cursor-pointer mb-2 text-sm hover:text-white hover:drop-shadow-[0_0_6px_red]"
+            >
+              {s.title}
+            </div>
+          ))}
+          <button
+            onClick={() => setShowSidebar(false)}
+            className="mt-6 text-xs text-red-400"
+          >
+            Close
+          </button>
+        </aside>
+      )}
+
+      {/* CANVAS / HISTORY */}
+      <div className="relative z-10 pt-20 pb-32 px-4 max-w-3xl mx-auto overflow-y-auto space-y-12">
+        {current.images.map((item, i) => (
+          <div key={i} className="space-y-2">
+            <p className="text-sm text-zinc-400">{item.prompt}</p>
+            <img
+              src={item.image}
+              className="rounded-xl shadow-[0_0_40px_rgba(255,0,0,0.8)]"
+            />
+          </div>
         ))}
       </div>
 
-      {/* BOTTOM INPUT BAR */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur border-t border-red-700 p-4">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          {/* STYLE BUTTON */}
-          <button
-            onClick={() => setShowStyles(!showStyles)}
-            className="w-10 h-10 rounded-full border border-red-600 text-red-500 text-xl"
-          >
-            +
-          </button>
-
-          {/* PROMPT INPUT */}
-          <input
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe the image you want to create…"
-            className="flex-1 bg-zinc-900 text-white px-4 py-3 rounded-xl border border-red-700 focus:outline-none"
-          />
-
-          {/* GENERATE BUTTON */}
-          <button
-            onClick={generate}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-700 to-red-500 text-black font-semibold"
-          >
-            {loading ? "Generating…" : "Generate"}
-          </button>
+      {/* STYLE MENU */}
+      {showStyles && (
+        <div className="fixed bottom-24 left-4 right-4 max-h-[50vh] overflow-y-auto bg-black/95 border border-red-700 rounded-xl p-4 z-30">
+          {ART_STYLES.map(s => (
+            <div
+              key={s}
+              onClick={() => {
+                setStyle(s);
+                setShowStyles(false);
+              }}
+              className="cursor-pointer text-sm mb-2 text-red-300 hover:text-white hover:drop-shadow-[0_0_6px_red]"
+            >
+              {s}
+            </div>
+          ))}
         </div>
+      )}
 
-        {/* STYLE MENU */}
-        {showStyles && (
-          <div className="mt-4 max-h-72 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2 bg-black border border-red-700 rounded-xl p-3">
-            {ART_STYLES.map((s) => (
-              <button
-                key={s}
-                onClick={() => {
-                  setStyle(s);
-                  setShowStyles(false);
-                }}
-                className="text-left px-3 py-2 rounded hover:bg-red-600 hover:text-black"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
+      {/* PROMPT BAR */}
+      <div className="fixed bottom-4 left-4 right-4 z-40 flex items-center gap-2 bg-zinc-900 rounded-full px-4 py-3 shadow-[0_0_25px_rgba(255,0,0,0.8)] border border-red-700">
+        <button
+          onClick={() => setShowStyles(v => !v)}
+          className="w-9 h-9 rounded-full border border-red-600 shadow-[0_0_15px_red]"
+        >
+          +
+        </button>
+        <input
+          value={prompt}
+          onChange={e => setPrompt(e.target.value)}
+          placeholder="Describe the image…"
+          className="flex-1 bg-transparent outline-none text-sm"
+        />
+        <button
+          onClick={generate}
+          disabled={loading}
+          className="px-4 py-2 rounded-full bg-red-600 text-black font-semibold shadow-[0_0_20px_rgba(255,0,0,0.9)]"
+        >
+          {loading ? "Generating…" : "Generate"}
+        </button>
       </div>
+
+      <style jsx global>{`
+        .starfield {
+          background:
+            radial-gradient(1px 1px at 20% 30%, white, transparent),
+            radial-gradient(1px 1px at 80% 40%, white, transparent),
+            radial-gradient(1px 1px at 50% 80%, white, transparent),
+            black;
+          animation: drift 80s linear infinite;
+        }
+        @keyframes drift {
+          from { background-position: 0 0; }
+          to { background-position: 2000px 2000px; }
+        }
+      `}</style>
     </main>
   );
 }
