@@ -2,7 +2,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "Aiexor",
-  description: "AI image generation",
+  description: "AI Image Generator",
 };
 
 export default function RootLayout({
@@ -12,10 +12,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <main className="app-root">{children}</main>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
-
