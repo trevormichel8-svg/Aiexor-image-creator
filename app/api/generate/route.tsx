@@ -1,38 +1,31 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { z } from "zod";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-/* -----------------------------
-   Request validation
------------------------------ */
-const GenerateSchema = z.object({
-  prompt: z.string().min(1),
-});
-
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const parsed = GenerateSchema.safeParse(body);
+    const { prompt, style } = await req.json();
 
-    if (!parsed.success) {
+    if (!prompt || typeof prompt !== "string") {
       return NextResponse.json(
-        { error: "Invalid request body" },
+        { error: "Prompt is required" },
         { status: 400 }
       );
     }
 
-    const { prompt } = parsed.data;
+    const fullPrompt = style
+      ? `${prompt}, ${style} style`
+      : prompt;
 
-    /* -----------------------------
-       Generate image (OpenAI)
-    ----------------------------- */
     const result = await openai.images.generate({
       model: "gpt-image-1",
-      prompt,
+      prompt: fullPrompt,
       size: "1024x1024",
     });
 
@@ -45,11 +38,10 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({
-      image_url: imageUrl,
-    });
-  } catch (err) {
-    console.error("Generate error:", err);
+    return NextResponse.json({ url: imageUrl });
+  } catch (error) {
+    console.error("Image generation error:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
