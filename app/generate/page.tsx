@@ -1,5 +1,6 @@
-export const dynamic = "force-dynamic";
 "use client";
+
+export const dynamic = "force-dynamic";
 
 import PromptInput from "@/components/generate/PromptInput";
 import GenerateButton from "@/components/generate/GenerateButton";
