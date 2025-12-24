@@ -1,27 +1,28 @@
-
+export const dynamic = "force-dynamic";
 "use client";
-import { useGenerate } from "@/components/generate/useGenerate";
+
 import PromptInput from "@/components/generate/PromptInput";
-import StyleChips from "@/components/generate/StyleChips";
-import AdvancedOptions from "@/components/generate/AdvancedOptions";
 import GenerateButton from "@/components/generate/GenerateButton";
 import ImageResult from "@/components/generate/ImageResult";
-import MyCreations from "@/components/gallery/MyCreations";
-import ExploreGrid from "@/components/explore/ExploreGrid";
+import { useGenerate } from "@/components/generate/useGenerate";
+import { useState } from "react";
 
 export default function GeneratePage() {
-  const gen = useGenerate();
+  const [prompt, setPrompt] = useState("");
+  const { generate, imageUrl, loading, error } = useGenerate();
+
   return (
-    <main className="min-h-screen bg-black text-white px-4 py-6">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <PromptInput {...gen} />
-        <StyleChips {...gen} />
-        <AdvancedOptions {...gen} />
-        <GenerateButton {...gen} />
-        <ImageResult {...gen} />
-        <MyCreations {...gen} />
-        <ExploreGrid {...gen} />
-      </div>
-    </main>
+    <div className="space-y-4">
+      <PromptInput value={prompt} onChange={setPrompt} />
+
+      <GenerateButton
+        loading={loading}
+        onGenerate={() => generate(prompt)}
+      />
+
+      {error && <p className="text-red-500">{error}</p>}
+
+      <ImageResult imageUrl={imageUrl} />
+    </div>
   );
 }
