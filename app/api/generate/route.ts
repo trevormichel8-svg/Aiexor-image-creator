@@ -76,7 +76,7 @@ export async function POST(req: Request) {
   const { error: dbError } = await supabase.from("images").insert({
     user_id: user.id,
     prompt,
-    model: MODEL_MAP.openai
+    model: MODEL_MAP.openai,
     image_url: signed.signedUrl
   });
 
