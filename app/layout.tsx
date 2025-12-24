@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Aiexor.com",
-  description: "Let Your Imagination Run Wild.",
+  title: "Aiexor",
+  description: "AI image generation",
 };
 
 export default function RootLayout({
@@ -13,16 +13,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {/* BACKGROUND EFFECTS (MOBILE SAFE) */}
-        <div className="bg-effects">
-          <div className="particles" />
-          <div className="streak s1" />
-          <div className="streak s2" />
-          <div className="streak s3" />
-        </div>
-
-        {children}
+        <main className="app-root">{children}</main>
       </body>
     </html>
   );
 }
+
