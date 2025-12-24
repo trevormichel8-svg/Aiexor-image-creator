@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
   /* 3️⃣ Generate image */
   const result = await experimental_generateImage({
-    model: MODEL_MAP,
+    model: MODEL_MAP.openai
     prompt,
     size: "1024x1024"
   });
