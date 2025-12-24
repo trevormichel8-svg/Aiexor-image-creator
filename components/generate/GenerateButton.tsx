@@ -14,4 +14,4 @@ export default function GenerateButton({ loading, onGenerate }: Props) {
     </button>
   );
 }
-📱 Mobile-first
+
