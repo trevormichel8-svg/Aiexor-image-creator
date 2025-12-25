@@ -16,7 +16,7 @@ export default function ArtStyleSheet({
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur">
       <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] bg-black border-t border-red-600/40 overflow-y-auto">
-        {artStyles.map((style) => (
+        {artStyle.map((style) => (
           <button
             key={style}
             onClick={() => {
