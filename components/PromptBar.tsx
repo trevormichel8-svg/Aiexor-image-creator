@@ -4,97 +4,120 @@ import { useState } from "react";
 import ArtStyleSheet from "./ArtStyleSheet";
 
 type PromptBarProps = {
-  onGenerate: (prompt: string, style: string) => void;
-  loading: boolean;
+  onImageGenerated: (url: string) => void;
 };
 
-export default function PromptBar({ onGenerate, loading }: PromptBarProps) {
+export default function PromptBar({ onImageGenerated }: PromptBarProps) {
   const [prompt, setPrompt] = useState("");
-  const [style, setStyle] = useState("");
-  const [stylesOpen, setStylesOpen] = useState(false);
+  const [style, setStyle] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showStyles, setShowStyles] = useState(false);
 
-  function handleGenerate() {
+  async function generateImage() {
     if (!prompt.trim() || loading) return;
-    onGenerate(prompt.trim(), style);
-    setPrompt("");
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          style,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data?.imageUrl) {
+        onImageGenerated(data.imageUrl);
+        setPrompt("");
+      }
+    } catch (err) {
+      console.error("Generate failed:", err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <>
-      {/* Art Style Selector */}
-      <ArtStyleSheet
-        open={stylesOpen}
-        onSelect={(s) => setStyle(s)}
-        onClose={() => setStylesOpen(false)}
-      />
+      {/* ART STYLE MODAL */}
+      {showStyles && (
+        <ArtStyleSheet
+          onSelect={(s) => {
+            setStyle(s);
+            setShowStyles(false);
+          }}
+          onClose={() => setShowStyles(false)}
+        />
+      )}
 
-      {/* Prompt Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-black">
+      {/* PROMPT BAR */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 px-3 pb-3">
         <div
           className="
-            mx-auto max-w-3xl
-            flex items-center gap-3
+            flex items-center gap-2
+            bg-neutral-900
             rounded-full
-            bg-zinc-900
-            px-4 py-3
-            border border-red-600/60
-            shadow-[0_0_30px_rgba(255,0,0,0.6)]
+            px-3 py-2
+            border border-red-600/50
+            shadow-[0_0_20px_rgba(220,38,38,0.8)]
           "
         >
-          {/* Art Style Button */}
+          {/* + STYLE BUTTON */}
           <button
-            type="button"
-            onClick={() => setStylesOpen(true)}
+            onClick={() => setShowStyles(true)}
             className="
-              text-red-500 text-xl font-bold
-              hover:text-red-400
-              transition
+              flex items-center justify-center
+              w-9 h-9
+              rounded-full
+              border border-red-600/60
+              text-red-400
+              shadow-[0_0_12px_rgba(220,38,38,0.9)]
+              active:scale-95
             "
-            title="Art styles"
           >
             +
           </button>
 
-          {/* Prompt Input */}
-          <textarea
+          {/* PROMPT INPUT */}
+          <input
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={
-              style
-                ? `Style: ${style} — describe your image...`
-                : "Describe what you want to create..."
+              style ? `Style: ${style}` : "Describe the image you want to create…"
             }
-            rows={1}
             className="
               flex-1
-              resize-none
               bg-transparent
               text-white
-              placeholder-zinc-400
+              placeholder-neutral-400
               outline-none
-              text-sm sm:text-base
+              text-sm
             "
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleGenerate();
-              }
+              if (e.key === "Enter") generateImage();
             }}
           />
 
-          {/* Generate Button */}
+          {/* GENERATE BUTTON */}
           <button
-            type="button"
-            onClick={handleGenerate}
+            onClick={generateImage}
             disabled={loading}
-            className={`
-              text-red-500 font-bold
-              transition
-              ${loading ? "opacity-50 cursor-not-allowed" : "hover:text-red-400"}
-            `}
-            title="Generate"
+            className="
+              px-4 py-2
+              rounded-full
+              bg-red-600
+              text-white
+              text-sm font-medium
+              shadow-[0_0_20px_rgba(220,38,38,1)]
+              disabled:opacity-50
+              active:scale-95
+            "
           >
-            {loading ? "…" : "⬆"}
+            {loading ? "…" : "Generate"}
           </button>
         </div>
       </div>
