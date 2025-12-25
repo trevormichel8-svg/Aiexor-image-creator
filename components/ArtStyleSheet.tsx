@@ -1,6 +1,6 @@
 "use client";
 
-import artStyles from "@/lib/artStyles";
+import artstyle from "@/lib/artstyle";
 
 export default function ArtStyleSheet({
   open,
