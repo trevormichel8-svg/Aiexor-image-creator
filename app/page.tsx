@@ -7,25 +7,42 @@ import ImageCanvas from "@/components/ImageCanvas";
 
 export default function Page() {
   const [images, setImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  function generate(prompt: string, style: string) {
-    if (!prompt) return;
+  async function generate(prompt: string, style: string) {
+    if (!prompt || loading) return;
 
-    // TEMP PLACEHOLDER IMAGE
-    const img = `https://picsum.photos/seed/${encodeURIComponent(
-      prompt + style
-    )}/1024/1024`;
+    setLoading(true);
 
-    setTimeout(() => {
-      setImages((prev) => [...prev, img]);
-    }, 1500);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, style }),
+      });
+
+      const data = await res.json();
+
+      if (data?.image) {
+        setImages((prev) => [...prev, data.image]);
+      }
+    } catch (err) {
+      console.error("Generation failed", err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <>
+    <main className="relative min-h-screen overflow-hidden">
+      {/* Animated space background */}
       <Starfield />
+
+      {/* Scrollable image history */}
       <ImageCanvas images={images} />
-      <PromptBar onGenerate={generate} />
-    </>
+
+      {/* Bottom prompt bar */}
+      <PromptBar onGenerate={generate} loading={loading} />
+    </main>
   );
 }
