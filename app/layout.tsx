@@ -1,10 +1,5 @@
 import "./globals.css";
 
-export const metadata = {
-  title: "Aiexor",
-  description: "AI Image Generator",
-};
-
 export default function RootLayout({
   children,
 }: {
@@ -12,7 +7,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="bg-black text-white">{children}</body>
     </html>
   );
 }
