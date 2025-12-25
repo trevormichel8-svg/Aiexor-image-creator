@@ -18,13 +18,13 @@ export default function PromptBar({ onGenerate, loading }: PromptBarProps) {
       {/* Art style bottom sheet */}
       {showStyles && (
         <ArtStyleSheet
-          selected={style}
-          onSelect={(s) => {
-            setStyle(s);
-            setShowStyles(false);
-          }}
-          onClose={() => setShowStyles(false)}
-        />
+  open={showStyles}
+  onSelect={(s) => {
+    setStyle(s);
+    setShowStyles(false);
+  }}
+  onClose={() => setShowStyles(false)}
+/>   
       )}
 
       {/* Bottom prompt bar */}
