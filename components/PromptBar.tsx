@@ -2,30 +2,39 @@
 
 import { useState } from "react";
 
-type PromptBarProps = {
+interface PromptBarProps {
   onGenerate: (prompt: string) => void;
   loading: boolean;
-};
+}
 
 export default function PromptBar({ onGenerate, loading }: PromptBarProps) {
   const [prompt, setPrompt] = useState("");
 
-  return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[95%] max-w-xl flex gap-2">
-      <input
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Describe the image you want..."
-        className="flex-1 px-4 py-2 rounded border border-gray-400"
-      />
+  const handleSubmit = () => {
+    if (!prompt.trim() || loading) return;
+    onGenerate(prompt);
+    setPrompt("");
+  };
 
-      <button
-        disabled={loading}
-        onClick={() => onGenerate(prompt)}
-        className="px-4 py-2 bg-white border border-gray-400 rounded"
-      >
-        {loading ? "..." : "Generate"}
-      </button>
+  return (
+    <div className="prompt-bar-wrapper">
+      <div className="prompt-bar-glow">
+        <input
+          className="prompt-input"
+          placeholder="Ask Aiexor…"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+        />
+
+        <button
+          className="prompt-generate-btn"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? "…" : "→"}
+        </button>
+      </div>
     </div>
   );
 }

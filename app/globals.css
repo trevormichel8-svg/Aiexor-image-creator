@@ -10,3 +10,66 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* ===== ChatGPT-style Prompt Bar ===== */
+
+.prompt-bar-wrapper {
+  position: fixed;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.prompt-bar-glow {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 24px);
+  max-width: 720px;
+  padding: 10px;
+  border-radius: 999px;
+  background: #0b0b0b;
+  box-shadow:
+    0 0 12px rgba(220, 38, 38, 0.8),
+    0 0 24px rgba(220, 38, 38, 0.6),
+    inset 0 0 12px rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 50, 50, 0.7);
+}
+
+.prompt-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 16px;
+  padding: 10px 14px;
+}
+
+.prompt-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.prompt-generate-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(145deg, #ff2a2a, #b80000);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow:
+    0 0 10px rgba(255, 50, 50, 0.9),
+    inset 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.prompt-generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
