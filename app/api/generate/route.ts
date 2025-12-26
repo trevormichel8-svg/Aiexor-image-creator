@@ -7,8 +7,7 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { prompt, style } = body;
+    const { prompt } = await req.json();
 
     if (!prompt) {
       return NextResponse.json(
@@ -17,29 +16,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const finalPrompt = style
-      ? `${prompt}, ${style}`
-      : prompt;
-
     const result = await openai.images.generate({
-      model: "gpt-image-1", // ✅ WORKS
-      prompt: finalPrompt,
+      model: "gpt-image-1",
+      prompt,
       size: "1024x1024",
     });
 
-    const imageBase64 = result.data[0].b64_json;
-
     return NextResponse.json({
-      image: `data:image/png;base64,${imageBase64}`,
+      image: result.data[0].b64_json,
     });
-  } catch (error: any) {
-    console.error("IMAGE GENERATION ERROR:", error);
-
+  } catch (err) {
+    console.error("IMAGE ERROR:", err);
     return NextResponse.json(
-      {
-        error: "Image generation failed",
-        details: error?.message ?? "Unknown error",
-      },
+      { error: "Image generation failed" },
       { status: 500 }
     );
   }
