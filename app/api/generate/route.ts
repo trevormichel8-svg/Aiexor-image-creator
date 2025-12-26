@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(req: Request) {
@@ -10,24 +10,29 @@ export async function POST(req: Request) {
     const { prompt, style } = await req.json();
 
     if (!prompt) {
-      return NextResponse.json({ error: "No prompt provided" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing prompt" },
+        { status: 400 }
+      );
     }
 
     const fullPrompt = style
-      ? `${prompt}, ${style} style`
+      ? `${prompt}, art style: ${style}`
       : prompt;
 
-    const image = await openai.images.generate({
+    const result = await openai.images.generate({
       model: "gpt-image-1",
       prompt: fullPrompt,
       size: "1024x1024",
     });
 
+    const imageBase64 = result.data[0].b64_json;
+
     return NextResponse.json({
-      imageUrl: image.data[0].url,
+      imageBase64,
     });
-  } catch (err: any) {
-    console.error("IMAGE GENERATION ERROR:", err);
+  } catch (error) {
+    console.error(error);
     return NextResponse.json(
       { error: "Image generation failed" },
       { status: 500 }
