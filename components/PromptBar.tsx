@@ -15,40 +15,55 @@ export default function PromptBar({ onGenerate, loading }: PromptBarProps) {
 
   return (
     <>
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[95%] max-w-3xl z-40">
+      {/* BOTTOM FIXED PROMPT BAR */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 px-3 pb-4">
         <div
-          className="flex items-center gap-2 bg-black rounded-full px-3 py-2 border border-red-600/50"
-          style={{ boxShadow: "0 0 20px rgba(255,0,0,0.5)" }}
+          className="mx-auto flex items-center gap-2 max-w-3xl
+                     bg-black border border-red-600/50
+                     rounded-full px-3 py-2"
+          style={{
+            boxShadow: "0 0 22px rgba(255,0,0,0.55)",
+          }}
         >
-          {/* + Button */}
+          {/* + BUTTON (CIRCLE) */}
           <button
             onClick={() => setShowStyles(true)}
-            className="text-red-400 text-2xl px-2"
-            style={{ textShadow: "0 0 10px rgba(255,0,0,0.8)" }}
+            className="flex items-center justify-center
+                       w-10 h-10 rounded-full
+                       text-red-400 text-2xl"
+            style={{
+              boxShadow: "0 0 12px rgba(255,0,0,0.8)",
+            }}
           >
             +
           </button>
 
-          {/* Input */}
+          {/* INPUT */}
           <input
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={`Style: ${style}`}
-            className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
+            className="flex-1 bg-transparent text-white
+                       placeholder-gray-400 outline-none px-1"
           />
 
-          {/* Generate */}
+          {/* GENERATE BUTTON (CIRCLE) */}
           <button
             disabled={loading}
             onClick={() => onGenerate(prompt, style)}
-            className="text-red-400 px-3"
-            style={{ textShadow: "0 0 10px rgba(255,0,0,0.8)" }}
+            className="flex items-center justify-center
+                       w-10 h-10 rounded-full
+                       text-red-400 text-xl"
+            style={{
+              boxShadow: "0 0 12px rgba(255,0,0,0.8)",
+            }}
           >
             {loading ? "…" : "↵"}
           </button>
         </div>
       </div>
 
+      {/* ART STYLE SHEET */}
       <ArtStyleSheet
         open={showStyles}
         onSelect={setStyle}
