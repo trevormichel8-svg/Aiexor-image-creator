@@ -23,7 +23,7 @@ export default function PromptBar({ onGenerate, loading }: Props) {
           }}
           onClose={() => setShowStyles(false)}
         />
-      )}
+      
 
       <div className="prompt-bar-wrapper">
         <div className="prompt-bar-glow">
