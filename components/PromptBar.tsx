@@ -11,24 +11,39 @@ type Props = {
 export default function PromptBar({ onGenerate, loading }: Props) {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState("Photorealistic");
-  const [open, setOpen] = useState(false);
+  const [showStyles, setShowStyles] = useState(false);
+
+  function handleGenerate() {
+    if (!prompt.trim()) return;
+
+    // 🔑 THIS IS THE FIX:
+    const styledPrompt =
+      style && style !== "None"
+        ? `${prompt}, in ${style} style`
+        : prompt;
+
+    onGenerate(styledPrompt, style);
+    setPrompt("");
+  }
 
   return (
     <>
-      <ArtStyleSheet
-        open={open}
-        onClose={() => setOpen(false)}
-        onSelect={(s) => {
-          setStyle(s);
-          setOpen(false);
-        }}
-      />
+      {showStyles && (
+        <ArtStyleSheet
+          open={showStyles}
+          onSelect={(s) => {
+            setStyle(s);
+            setShowStyles(false);
+          }}
+          onClose={() => setShowStyles(false)}
+        />
+      )}
 
       <div className="prompt-bar-wrapper">
         <div className="prompt-bar-glow">
           <button
             className="prompt-generate-btn"
-            onClick={() => setOpen(true)}
+            onClick={() => setShowStyles(true)}
             title="Art styles"
           >
             +
@@ -36,19 +51,17 @@ export default function PromptBar({ onGenerate, loading }: Props) {
 
           <input
             className="prompt-input"
-            placeholder={`Ask Aiexor… (${style})`}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
+            placeholder={`Ask Aiexor… (${style})`}
+            onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
           />
 
           <button
             className="prompt-generate-btn"
-            disabled={loading || !prompt}
-            onClick={() => {
-              if (!prompt) return;
-              onGenerate(prompt, style);
-              setPrompt("");
-            }}
+            onClick={handleGenerate}
+            disabled={loading}
+            title="Generate"
           >
             ↑
           </button>
