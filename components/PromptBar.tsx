@@ -3,31 +3,70 @@
 import { useState } from "react";
 import ArtStyleSheet from "./ArtStyleSheet";
 
-type Props = {
-  onGenerate: (prompt: string, style: string) => void;
-  loading: boolean;
+type HistoryItem = {
+  id: string;
+  image: string;
+  prompt: string;
+  displayPrompt: string;
+  style: string;
 };
 
-export default function PromptBar({ onGenerate, loading }: Props) {
+export default function PromptBar({
+  onGenerate,
+  loading,
+}: {
+  onGenerate: (compiledPrompt: string) => Promise<string>;
+  loading: boolean;
+}) {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState("Photorealistic");
   const [showStyles, setShowStyles] = useState(false);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
 
-  function handleGenerate() {
-    if (!prompt.trim()) return;
+  function buildPrompt(raw: string, style: string) {
+    return `Style: ${style}.\n\n${raw}`;
+  }
 
-    // 🔑 THIS IS THE FIX:
-    const styledPrompt =
-      style && style !== "None"
-        ? `${prompt}, in ${style} style`
-        : prompt;
+  async function handleGenerate() {
+    if (!prompt.trim() || loading) return;
 
-    onGenerate(styledPrompt, style);
+    const compiledPrompt = buildPrompt(prompt, style);
+
+    const image = await onGenerate(compiledPrompt);
+
+    setHistory((prev) => [
+      {
+        id: crypto.randomUUID(),
+        image,
+        prompt: compiledPrompt,
+        displayPrompt: prompt,
+        style,
+      },
+      ...prev,
+    ]);
+
     setPrompt("");
   }
 
   return (
     <>
+      {/* Image history */}
+      <div className="w-full px-3 pt-4 space-y-6">
+        {history.map((item) => (
+          <div key={item.id}>
+            <img
+              src={`data:image/png;base64,${item.image}`}
+              className="rounded-xl shadow-lg mx-auto"
+              alt={item.displayPrompt}
+            />
+            <div className="text-xs text-white/60 mt-1">
+              {item.displayPrompt} · {item.style}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Art style sheet */}
       {showStyles && (
         <ArtStyleSheet
           open={showStyles}
@@ -39,21 +78,22 @@ export default function PromptBar({ onGenerate, loading }: Props) {
         />
       )}
 
+      {/* Prompt bar */}
       <div className="prompt-bar-wrapper">
         <div className="prompt-bar-glow">
           <button
             className="prompt-generate-btn"
             onClick={() => setShowStyles(true)}
-            title="Art styles"
+            aria-label="Choose art style"
           >
             +
           </button>
 
           <input
             className="prompt-input"
+            placeholder={`Ask Aiexor… (${style})`}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder={`Ask Aiexor… (${style})`}
             onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
           />
 
@@ -61,7 +101,7 @@ export default function PromptBar({ onGenerate, loading }: Props) {
             className="prompt-generate-btn"
             onClick={handleGenerate}
             disabled={loading}
-            title="Generate"
+            aria-label="Generate image"
           >
             ↑
           </button>
