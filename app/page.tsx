@@ -3,26 +3,31 @@
 import { useState } from "react";
 import PromptBar from "@/components/PromptBar";
 
-type ImageItem = {
-  prompt: string;
-  url: string;
-};
-
 export default function Page() {
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function generate(prompt: string, style: string) {
+    setLoading(true);
+    setError(null);
+    setImage(null);
+
     try {
-      setLoading(true);
+      // ✅ Merge style into prompt (CRITICAL)
+      const fullPrompt = style
+        ? `${prompt}, ${style} style`
+        : prompt;
 
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: `${prompt}, ${style} style`,
-        }),
+        body: JSON.stringify({ prompt: fullPrompt }),
       });
+
+      if (!res.ok) {
+        throw new Error("Generation failed");
+      }
 
       const data = await res.json();
 
@@ -30,31 +35,55 @@ export default function Page() {
         throw new Error("No image returned");
       }
 
-      setImages((prev) => [
-        ...prev,
-        { prompt, url: data.image },
-      ]);
-    } catch (err) {
-      console.error(err);
-      alert("Image generation failed");
+      // ✅ Store BASE64 only (not URL)
+      setImage(data.image);
+    } catch (err: any) {
+      setError(err.message || "Image generation failed");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-black text-white pb-32">
-      <div className="p-4 space-y-8">
-        {images.map((img, i) => (
-          <div
-            key={i}
-            className="max-w-xl mx-auto rounded-xl overflow-hidden border border-red-600/40 shadow-[0_0_20px_rgba(255,0,0,0.4)]"
-          >
-            <img src={img.url} alt={img.prompt} />
-          </div>
-        ))}
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "black",
+        paddingBottom: "120px", // space for prompt bar
+      }}
+    >
+      {/* IMAGE CANVAS */}
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          paddingTop: "16px",
+        }}
+      >
+        {loading && (
+          <p style={{ color: "white", opacity: 0.7 }}>Generating…</p>
+        )}
+
+        {error && (
+          <p style={{ color: "red", opacity: 0.8 }}>{error}</p>
+        )}
+
+        {image && (
+          <img
+            src={`data:image/png;base64,${image}`} // ✅ FIX
+            alt="Generated"
+            style={{
+              maxWidth: "100%",
+              height: "auto",
+              borderRadius: "12px",
+              boxShadow: "0 0 40px rgba(255,0,0,0.25)",
+            }}
+          />
+        )}
       </div>
 
+      {/* PROMPT BAR */}
       <PromptBar onGenerate={generate} loading={loading} />
     </main>
   );
