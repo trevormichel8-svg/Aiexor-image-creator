@@ -15,8 +15,8 @@ export default function PromptBar({ onGenerate, loading }: Props) {
 
   return (
     <>
-      {showStyles && (
         <ArtStyleSheet
+          open={showStyles}
           onSelect={(s) => {
             setStyle(s);
             setShowStyles(false);
