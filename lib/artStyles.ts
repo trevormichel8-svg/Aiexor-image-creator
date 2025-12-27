@@ -1,5 +1,4 @@
-// lib/artStyles.ts
-export const ART_STYLES: string[] = [
+const artStyles = [
   "Photorealistic",
   "Ultra Realistic",
   "Cinematic",
@@ -14,15 +13,15 @@ export const ART_STYLES: string[] = [
   "Polaroid",
   "Infrared",
   "Night Photography",
+
   "Digital Art",
   "Concept Art",
   "Matte Painting",
   "Environment Art",
   "Character Design",
   "Game Art",
-  "Splash Art",
-  "Key Art",
   "Illustration",
+
   "Anime",
   "Manga",
   "Chibi",
@@ -32,6 +31,7 @@ export const ART_STYLES: string[] = [
   "Cyberpunk Anime",
   "Dark Anime",
   "Isekai Style",
+
   "Cyberpunk",
   "Steampunk",
   "Dieselpunk",
@@ -42,6 +42,7 @@ export const ART_STYLES: string[] = [
   "Galaxy Scene",
   "Nebula",
   "Alien World",
+
   "Fantasy",
   "Dark Fantasy",
   "High Fantasy",
@@ -50,6 +51,7 @@ export const ART_STYLES: string[] = [
   "Medieval Fantasy",
   "Dungeons and Dragons",
   "Magic Realism",
+
   "Oil Painting",
   "Watercolor",
   "Acrylic Painting",
@@ -58,6 +60,7 @@ export const ART_STYLES: string[] = [
   "Pencil Drawing",
   "Pastel Drawing",
   "Ink Wash",
+
   "Impressionism",
   "Expressionism",
   "Abstract",
@@ -69,9 +72,11 @@ export const ART_STYLES: string[] = [
   "Modern Art",
   "Art Nouveau",
   "Art Deco",
+
   "Baroque",
   "Renaissance",
   "Ukiyo-e",
+
   "Pixel Art",
   "8-bit",
   "16-bit",
@@ -79,8 +84,10 @@ export const ART_STYLES: string[] = [
   "Isometric",
   "Low Poly",
   "Voxel Art",
+
   "Wireframe",
   "Blueprint",
+
   "3D Render",
   "Hyperreal 3D",
   "Octane Render",
@@ -88,6 +95,7 @@ export const ART_STYLES: string[] = [
   "Blender Render",
   "ZBrush Sculpt",
   "Clay Render",
+
   "Graffiti",
   "Street Art",
   "Tattoo Flash",
@@ -96,6 +104,6 @@ export const ART_STYLES: string[] = [
   "Editorial Illustration",
   "Comic Book",
   "Graphic Novel",
-  "Line Art",
-  "Flat Design"
 ];
+
+export default artStyles;

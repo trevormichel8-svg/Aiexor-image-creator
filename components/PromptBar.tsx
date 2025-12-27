@@ -10,46 +10,45 @@ type Props = {
 
 export default function PromptBar({ onGenerate, loading }: Props) {
   const [prompt, setPrompt] = useState("");
-  const [style, setStyle] = useState("");
-  const [showStyles, setShowStyles] = useState(false);
+  const [style, setStyle] = useState("Photorealistic");
+  const [open, setOpen] = useState(false);
 
   return (
     <>
-        <ArtStyleSheet
-          open={showStyles}
-          onSelect={(s) => {
-            setStyle(s);
-            setShowStyles(false);
-          }}
-          onClose={() => setShowStyles(false)}
-        />
-      
+      <ArtStyleSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        onSelect={(s) => {
+          setStyle(s);
+          setOpen(false);
+        }}
+      />
 
       <div className="prompt-bar-wrapper">
         <div className="prompt-bar-glow">
-          {/* STYLE BUTTON */}
           <button
             className="prompt-generate-btn"
-            onClick={() => setShowStyles(true)}
-            title="Styles"
+            onClick={() => setOpen(true)}
+            title="Art styles"
           >
             +
           </button>
 
-          {/* INPUT */}
           <input
             className="prompt-input"
-            placeholder="Ask Aiexor..."
+            placeholder={`Ask Aiexor… (${style})`}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
           />
 
-          {/* GENERATE */}
           <button
             className="prompt-generate-btn"
-            disabled={loading}
-            onClick={() => onGenerate(prompt, style)}
-            title="Generate"
+            disabled={loading || !prompt}
+            onClick={() => {
+              if (!prompt) return;
+              onGenerate(prompt, style);
+              setPrompt("");
+            }}
           >
             ↑
           </button>
