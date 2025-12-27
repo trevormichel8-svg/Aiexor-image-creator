@@ -10,7 +10,7 @@ type Message = {
   imageUrl: string;
 };
 
-export default function HomePage() {
+export default function Page() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +18,7 @@ export default function HomePage() {
     if (!prompt.trim()) return;
 
     setLoading(true);
+
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -26,7 +27,10 @@ export default function HomePage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Generation failed");
+
+      if (!data?.image) {
+        throw new Error("No image returned");
+      }
 
       setMessages((prev) => [
         ...prev,
@@ -34,42 +38,37 @@ export default function HomePage() {
           id: crypto.randomUUID(),
           prompt,
           style,
-          imageUrl: data.image,
+          imageUrl: data.image.startsWith("data:")
+            ? data.image
+            : `data:image/png;base64,${data.image}`,
         },
       ]);
     } catch (err) {
-      console.error(err);
+      console.error("Image generation failed", err);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      {/* Scrollable canvas / history */}
-      <div className="canvas">
+    <main className="relative min-h-screen bg-black text-white">
+      {/* Image history canvas */}
+      <div className="pb-40 px-4 space-y-6">
         {messages.map((m) => (
-          <div key={m.id} className="message">
+          <div key={m.id}>
+            <div className="text-sm text-red-400 mb-2">
+              {m.prompt} · {m.style}
+            </div>
             <img
               src={m.imageUrl}
               alt={m.prompt}
-              className="generated-image"
+              className="rounded-xl shadow-[0_0_30px_rgba(255,0,0,0.45)] max-w-full"
             />
-            <div className="caption">
-              {m.prompt}
-              <span className="style"> · {m.style}</span>
-            </div>
           </div>
         ))}
-
-        {messages.length === 0 && (
-          <div className="empty-state">
-            Start by entering a prompt below.
-          </div>
-        )}
       </div>
 
-      {/* Fixed bottom prompt bar */}
+      {/* Bottom prompt bar */}
       <PromptBar onGenerate={generate} loading={loading} />
     </main>
   );
