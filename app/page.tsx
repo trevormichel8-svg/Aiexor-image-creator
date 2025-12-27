@@ -1,65 +1,54 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import PromptBar from "@/components/PromptBar";
 
-type GeneratedImage = {
-  image: string;
+type ImageItem = {
   prompt: string;
+  style: string;
+  image: string;
 };
 
-export default function Home() {
-  const [images, setImages] = useState<GeneratedImage[]>([]);
+export default function Page() {
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // keep a ref so PromptBar adapter can return last image
-  const imagesRef = useRef<GeneratedImage[]>([]);
-  useEffect(() => {
-    imagesRef.current = images;
-  }, [images]);
-
-  /**
-   * ORIGINAL generator
-   * DO NOT change API contract
-   */
-  async function generate(prompt: string, _style: string) {
+  async function generate(compiledPrompt: string): Promise<string> {
     setLoading(true);
+
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt: compiledPrompt }),
       });
 
+      if (!res.ok) {
+        throw new Error("Generation failed");
+      }
+
       const data = await res.json();
-
-      if (!data?.image) throw new Error("No image returned");
-
-      setImages((prev) => [
-        {
-          image: data.image,
-          prompt,
-        },
-        ...prev,
-      ]);
-    } catch (err) {
-      console.error("Generation failed", err);
+      return data.image;
     } finally {
       setLoading(false);
     }
   }
 
-  /**
-   * 🔑 ADAPTER REQUIRED BY PromptBar
-   * PromptBar → compiledPrompt → image
-   */
-  async function generateFromCompiledPrompt(
-    compiledPrompt: string
-  ): Promise<string> {
-    await generate(compiledPrompt, "");
+  async function handleGenerate(prompt: string, style: string) {
+    const compiledPrompt = style
+      ? `${prompt} · ${style}`
+      : prompt;
 
-    const latest = imagesRef.current[0];
-    return latest?.image ?? "";
+    const image = await generate(compiledPrompt);
+
+    setImages((prev) => [
+      {
+        prompt,
+        style,
+        image,
+      },
+      ...prev,
+    ]);
   }
 
   return (
@@ -70,12 +59,41 @@ export default function Home() {
         paddingBottom: "120px",
       }}
     >
-      {/* IMAGE HISTORY */}
-      <div style={{ padding: "16px" }}>
-        {images.map((img, i) => (
-          <div key={i} style={{ marginBottom: "24px" }}>
+      {/* Image history */}
+      <div
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto",
+          padding: "16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+        }}
+      >
+        {images.map((img, idx) => (
+          <div key={idx}>
+            <div
+              style={{
+                marginBottom: "8px",
+                color: "#fff",
+                opacity: 0.9,
+              }}
+            >
+              {img.prompt}
+              {img.style && (
+                <span style={{ opacity: 0.6 }}>
+                  {" "}
+                  · {img.style}
+                </span>
+              )}
+            </div>
+
             <img
-              src={img.image}
+              src={
+                img.image.startsWith("data:image")
+                  ? img.image
+                  : `data:image/png;base64,${img.image}`
+              }
               alt={img.prompt}
               style={{
                 width: "100%",
@@ -83,21 +101,12 @@ export default function Home() {
                 display: "block",
               }}
             />
-            <div
-              style={{
-                opacity: 0.7,
-                fontSize: "14px",
-                marginTop: "6px",
-              }}
-            >
-              {img.prompt}
-            </div>
           </div>
         ))}
       </div>
 
-      {/* PROMPT BAR */}
-      <PromptBar onGenerate={generateFromCompiledPrompt} loading={loading} />
+      {/* Bottom prompt bar */}
+      <PromptBar onGenerate={handleGenerate} loading={loading} />
     </main>
   );
 }
