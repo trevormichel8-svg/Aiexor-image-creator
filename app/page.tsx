@@ -1,75 +1,103 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PromptBar from "@/components/PromptBar";
 
-type Message = {
-  id: string;
+type GeneratedImage = {
+  image: string;
   prompt: string;
-  style: string;
-  imageUrl: string;
 };
 
-export default function Page() {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function Home() {
+  const [images, setImages] = useState<GeneratedImage[]>([]);
   const [loading, setLoading] = useState(false);
 
-  async function generate(prompt: string, style: string) {
-    if (!prompt.trim()) return;
+  // keep a ref so PromptBar adapter can return last image
+  const imagesRef = useRef<GeneratedImage[]>([]);
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
 
+  /**
+   * ORIGINAL generator
+   * DO NOT change API contract
+   */
+  async function generate(prompt: string, _style: string) {
     setLoading(true);
-
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, style }),
+        body: JSON.stringify({ prompt }),
       });
 
       const data = await res.json();
 
-      if (!data?.image) {
-        throw new Error("No image returned");
-      }
+      if (!data?.image) throw new Error("No image returned");
 
-      setMessages((prev) => [
-        ...prev,
+      setImages((prev) => [
         {
-          id: crypto.randomUUID(),
+          image: data.image,
           prompt,
-          style,
-          imageUrl: data.image.startsWith("data:")
-            ? data.image
-            : `data:image/png;base64,${data.image}`,
         },
+        ...prev,
       ]);
     } catch (err) {
-      console.error("Image generation failed", err);
+      console.error("Generation failed", err);
     } finally {
       setLoading(false);
     }
   }
 
+  /**
+   * 🔑 ADAPTER REQUIRED BY PromptBar
+   * PromptBar → compiledPrompt → image
+   */
+  async function generateFromCompiledPrompt(
+    compiledPrompt: string
+  ): Promise<string> {
+    await generate(compiledPrompt, "");
+
+    const latest = imagesRef.current[0];
+    return latest?.image ?? "";
+  }
+
   return (
-    <main className="relative min-h-screen bg-black text-white">
-      {/* Image history canvas */}
-      <div className="pb-40 px-4 space-y-6">
-        {messages.map((m) => (
-          <div key={m.id}>
-            <div className="text-sm text-red-400 mb-2">
-              {m.prompt} · {m.style}
-            </div>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "black",
+        paddingBottom: "120px",
+      }}
+    >
+      {/* IMAGE HISTORY */}
+      <div style={{ padding: "16px" }}>
+        {images.map((img, i) => (
+          <div key={i} style={{ marginBottom: "24px" }}>
             <img
-              src={m.imageUrl}
-              alt={m.prompt}
-              className="rounded-xl shadow-[0_0_30px_rgba(255,0,0,0.45)] max-w-full"
+              src={img.image}
+              alt={img.prompt}
+              style={{
+                width: "100%",
+                borderRadius: "12px",
+                display: "block",
+              }}
             />
+            <div
+              style={{
+                opacity: 0.7,
+                fontSize: "14px",
+                marginTop: "6px",
+              }}
+            >
+              {img.prompt}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Bottom prompt bar */}
-      <PromptBar onGenerate={generate} loading={loading} />
+      {/* PROMPT BAR */}
+      <PromptBar onGenerate={generateFromCompiledPrompt} loading={loading} />
     </main>
   );
 }
