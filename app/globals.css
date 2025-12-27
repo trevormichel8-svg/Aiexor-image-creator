@@ -11,7 +11,7 @@ body {
   box-sizing: border-box;
 }
 
-/* ===== ChatGPT-style Prompt Bar ===== */
+/* ===== Prompt Bar ===== */
 
 .prompt-bar-wrapper {
   position: fixed;
@@ -34,11 +34,11 @@ body {
   padding: 10px;
   border-radius: 999px;
   background: #0b0b0b;
+  border: 1px solid rgba(255, 50, 50, 0.7);
   box-shadow:
     0 0 12px rgba(220, 38, 38, 0.8),
     0 0 24px rgba(220, 38, 38, 0.6),
     inset 0 0 12px rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 50, 50, 0.7);
 }
 
 .prompt-input {
@@ -70,6 +70,6 @@ body {
 }
 
 .prompt-generate-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
