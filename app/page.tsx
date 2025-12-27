@@ -5,18 +5,23 @@ import PromptBar from "@/components/PromptBar";
 
 type ImageItem = {
   prompt: string;
-  image: string;
+  style: string;
+  image: string; // base64 (no data: prefix required)
 };
 
 export default function Page() {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ EXACT SIGNATURE PROMPTBAR EXPECTS
-  async function onGenerate(compiledPrompt: string): Promise<string> {
-    setLoading(true);
-
+  /**
+   * IMPORTANT:
+   * PromptBar calls onGenerate with a SINGLE compiled prompt string.
+   * That compiled prompt already includes the style.
+   */
+  async function handleGenerate(compiledPrompt: string): Promise<string> {
     try {
+      setLoading(true);
+
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -28,14 +33,27 @@ export default function Page() {
       }
 
       const data = await res.json();
-      const image = data.image as string;
+
+      // Expecting base64 image from API
+      const imageBase64 = data.image;
+
+      // Extract style label if present (purely for UI/history)
+      const styleMatch = compiledPrompt.match(/Style:\s*(.+)$/i);
+      const style = styleMatch ? styleMatch[1] : "Default";
 
       setImages((prev) => [
-        { prompt: compiledPrompt, image },
+        {
+          prompt: compiledPrompt.replace(/Style:\s*.+$/i, "").trim(),
+          style,
+          image: imageBase64,
+        },
         ...prev,
       ]);
 
-      return image;
+      return imageBase64;
+    } catch (err) {
+      console.error(err);
+      return "";
     } finally {
       setLoading(false);
     }
@@ -46,26 +64,35 @@ export default function Page() {
       style={{
         minHeight: "100vh",
         background: "black",
-        paddingBottom: "140px",
+        paddingBottom: "120px", // reserve space for prompt bar
       }}
     >
       {/* IMAGE HISTORY */}
       <div
         style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-          padding: "16px",
           display: "flex",
           flexDirection: "column",
           gap: "24px",
+          padding: "16px",
         }}
       >
-        {images.map((item, idx) => (
-          <div key={idx}>
-            <div style={{ color: "#fff", marginBottom: "8px", opacity: 0.8 }}>
-              {item.prompt}
+        {images.map((item, index) => (
+          <div key={index}>
+            {/* Caption */}
+            <div
+              style={{
+                color: "#bbb",
+                fontSize: "14px",
+                marginBottom: "6px",
+              }}
+            >
+              <strong>{item.prompt}</strong>
+              {item.style && (
+                <span style={{ opacity: 0.7 }}> · {item.style}</span>
+              )}
             </div>
 
+            {/* Image */}
             <img
               src={
                 item.image.startsWith("data:image")
@@ -75,8 +102,11 @@ export default function Page() {
               alt={item.prompt}
               style={{
                 width: "100%",
+                maxHeight: "75vh",
+                objectFit: "contain",
                 borderRadius: "12px",
                 display: "block",
+                background: "#000",
               }}
             />
           </div>
@@ -84,7 +114,7 @@ export default function Page() {
       </div>
 
       {/* PROMPT BAR */}
-      <PromptBar onGenerate={onGenerate} loading={loading} />
+      <PromptBar onGenerate={handleGenerate} loading={loading} />
     </main>
   );
 }
