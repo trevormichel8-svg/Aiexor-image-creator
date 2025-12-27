@@ -4,14 +4,52 @@ body {
   padding: 0;
   background: black;
   color: white;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* ===== Prompt Bar ===== */
+/* ===== Canvas / History ===== */
+
+.canvas {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 140px; /* space for prompt bar */
+}
+
+.message {
+  margin-bottom: 28px;
+}
+
+.generated-image {
+  width: 100%;
+  border-radius: 16px;
+  box-shadow:
+    0 0 18px rgba(220, 38, 38, 0.6),
+    0 0 36px rgba(220, 38, 38, 0.4);
+}
+
+.caption {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.caption .style {
+  opacity: 0.6;
+}
+
+/* Empty state */
+
+.empty-state {
+  opacity: 0.4;
+  text-align: center;
+  margin-top: 120px;
+}
+
+/* ===== Prompt Bar (fixed bottom) ===== */
 
 .prompt-bar-wrapper {
   position: fixed;
@@ -34,10 +72,10 @@ body {
   padding: 10px;
   border-radius: 999px;
   background: #0b0b0b;
-  border: 1px solid rgba(255, 50, 50, 0.7);
+  border: 1px solid rgba(255, 60, 60, 0.7);
   box-shadow:
-    0 0 12px rgba(220, 38, 38, 0.8),
-    0 0 24px rgba(220, 38, 38, 0.6),
+    0 0 14px rgba(220, 38, 38, 0.8),
+    0 0 28px rgba(220, 38, 38, 0.6),
     inset 0 0 12px rgba(255, 255, 255, 0.08);
 }
 
@@ -55,21 +93,22 @@ body {
   color: rgba(255, 255, 255, 0.45);
 }
 
-.prompt-generate-btn {
+.prompt-generate-btn,
+.prompt-style-btn {
   width: 44px;
   height: 44px;
   border-radius: 999px;
   border: none;
-  background: linear-gradient(145deg, #ff2a2a, #b80000);
-  color: white;
-  font-size: 20px;
   cursor: pointer;
+  color: white;
+  font-size: 18px;
+  background: linear-gradient(145deg, #ff2a2a, #b80000);
   box-shadow:
-    0 0 10px rgba(255, 50, 50, 0.9),
-    inset 0 0 8px rgba(255, 255, 255, 0.2);
+    0 0 12px rgba(255, 50, 50, 0.9),
+    inset 0 0 8px rgba(255, 255, 255, 0.25);
 }
 
 .prompt-generate-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }

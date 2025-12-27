@@ -3,87 +3,73 @@
 import { useState } from "react";
 import PromptBar from "@/components/PromptBar";
 
-export default function Page() {
-  const [image, setImage] = useState<string | null>(null);
+type Message = {
+  id: string;
+  prompt: string;
+  style: string;
+  imageUrl: string;
+};
+
+export default function HomePage() {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function generate(prompt: string, style: string) {
+    if (!prompt.trim()) return;
+
     setLoading(true);
-    setError(null);
-    setImage(null);
-
     try {
-      // ✅ Merge style into prompt (CRITICAL)
-      const fullPrompt = style
-        ? `${prompt}, ${style} style`
-        : prompt;
-
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: fullPrompt }),
+        body: JSON.stringify({ prompt, style }),
       });
 
-      if (!res.ok) {
-        throw new Error("Generation failed");
-      }
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Generation failed");
 
-      if (!data?.image) {
-        throw new Error("No image returned");
-      }
-
-      // ✅ Store BASE64 only (not URL)
-      setImage(data.image);
-    } catch (err: any) {
-      setError(err.message || "Image generation failed");
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          prompt,
+          style,
+          imageUrl: data.image,
+        },
+      ]);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "black",
-        paddingBottom: "120px", // space for prompt bar
-      }}
-    >
-      {/* IMAGE CANVAS */}
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          paddingTop: "16px",
-        }}
-      >
-        {loading && (
-          <p style={{ color: "white", opacity: 0.7 }}>Generating…</p>
-        )}
+    <main className="min-h-screen bg-black text-white">
+      {/* Scrollable canvas / history */}
+      <div className="canvas">
+        {messages.map((m) => (
+          <div key={m.id} className="message">
+            <img
+              src={m.imageUrl}
+              alt={m.prompt}
+              className="generated-image"
+            />
+            <div className="caption">
+              {m.prompt}
+              <span className="style"> · {m.style}</span>
+            </div>
+          </div>
+        ))}
 
-        {error && (
-          <p style={{ color: "red", opacity: 0.8 }}>{error}</p>
-        )}
-
-        {image && (
-          <img
-            src={`data:image/png;base64,${image}`} // ✅ FIX
-            alt="Generated"
-            style={{
-              maxWidth: "100%",
-              height: "auto",
-              borderRadius: "12px",
-              boxShadow: "0 0 40px rgba(255,0,0,0.25)",
-            }}
-          />
+        {messages.length === 0 && (
+          <div className="empty-state">
+            Start by entering a prompt below.
+          </div>
         )}
       </div>
 
-      {/* PROMPT BAR */}
+      {/* Fixed bottom prompt bar */}
       <PromptBar onGenerate={generate} loading={loading} />
     </main>
   );
