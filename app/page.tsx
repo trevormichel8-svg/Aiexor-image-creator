@@ -5,7 +5,6 @@ import PromptBar from "@/components/PromptBar";
 
 type ImageItem = {
   prompt: string;
-  style: string;
   image: string;
 };
 
@@ -13,7 +12,8 @@ export default function Page() {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  async function generate(compiledPrompt: string): Promise<string> {
+  // ✅ EXACT SIGNATURE PROMPTBAR EXPECTS
+  async function onGenerate(compiledPrompt: string): Promise<string> {
     setLoading(true);
 
     try {
@@ -24,31 +24,21 @@ export default function Page() {
       });
 
       if (!res.ok) {
-        throw new Error("Generation failed");
+        throw new Error("Image generation failed");
       }
 
       const data = await res.json();
-      return data.image;
+      const image = data.image as string;
+
+      setImages((prev) => [
+        { prompt: compiledPrompt, image },
+        ...prev,
+      ]);
+
+      return image;
     } finally {
       setLoading(false);
     }
-  }
-
-  async function handleGenerate(prompt: string, style: string) {
-    const compiledPrompt = style
-      ? `${prompt} · ${style}`
-      : prompt;
-
-    const image = await generate(compiledPrompt);
-
-    setImages((prev) => [
-      {
-        prompt,
-        style,
-        image,
-      },
-      ...prev,
-    ]);
   }
 
   return (
@@ -56,10 +46,10 @@ export default function Page() {
       style={{
         minHeight: "100vh",
         background: "black",
-        paddingBottom: "120px",
+        paddingBottom: "140px",
       }}
     >
-      {/* Image history */}
+      {/* IMAGE HISTORY */}
       <div
         style={{
           maxWidth: "900px",
@@ -70,31 +60,19 @@ export default function Page() {
           gap: "24px",
         }}
       >
-        {images.map((img, idx) => (
+        {images.map((item, idx) => (
           <div key={idx}>
-            <div
-              style={{
-                marginBottom: "8px",
-                color: "#fff",
-                opacity: 0.9,
-              }}
-            >
-              {img.prompt}
-              {img.style && (
-                <span style={{ opacity: 0.6 }}>
-                  {" "}
-                  · {img.style}
-                </span>
-              )}
+            <div style={{ color: "#fff", marginBottom: "8px", opacity: 0.8 }}>
+              {item.prompt}
             </div>
 
             <img
               src={
-                img.image.startsWith("data:image")
-                  ? img.image
-                  : `data:image/png;base64,${img.image}`
+                item.image.startsWith("data:image")
+                  ? item.image
+                  : `data:image/png;base64,${item.image}`
               }
-              alt={img.prompt}
+              alt={item.prompt}
               style={{
                 width: "100%",
                 borderRadius: "12px",
@@ -105,8 +83,8 @@ export default function Page() {
         ))}
       </div>
 
-      {/* Bottom prompt bar */}
-      <PromptBar onGenerate={handleGenerate} loading={loading} />
+      {/* PROMPT BAR */}
+      <PromptBar onGenerate={onGenerate} loading={loading} />
     </main>
   );
 }
