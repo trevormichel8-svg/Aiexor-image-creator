@@ -1,3 +1,4 @@
+// app/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -6,52 +7,56 @@ import PromptBar from "@/components/PromptBar";
 export default function Page() {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  async function generate(prompt: string) {
-    if (!prompt) return;
-
-    setLoading(true);
-    setError("");
-
+  async function generate(prompt: string, style: string) {
     try {
+      setLoading(true);
+
+      const finalPrompt = style
+        ? `${prompt}, ${style}`
+        : prompt;
+
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt: finalPrompt }),
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Generation failed");
+      if (data.image) {
+        setImages((prev) => [data.image, ...prev]);
       }
-
-      const imageUrl = `data:image/png;base64,${data.image}`;
-      setImages((prev) => [...prev, imageUrl]);
-    } catch (err: any) {
-      setError("Image generation failed");
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-black text-white pb-24">
-      <div className="p-4 space-y-6">
-        {images.map((src, i) => (
-          <img
-            key={i}
-            src={src}
-            alt="Generated"
-            className="w-full rounded"
-          />
-        ))}
+    <>
+      {/* SCROLLABLE CANVAS */}
+      <main
+        id="canvas"
+        className="min-h-screen overflow-y-auto pb-32"
+      >
+        <div className="flex flex-col items-center gap-6 px-4 pt-6">
+          {images.map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt="Generated"
+              className="max-w-full rounded-xl shadow-[0_0_25px_rgba(255,0,0,0.5)]"
+            />
+          ))}
+        </div>
+      </main>
 
-        {error && <p className="text-red-500">{error}</p>}
-      </div>
-
-      <PromptBar onGenerate={generate} loading={loading} />
-    </main>
+      {/* FIXED PROMPT BAR */}
+      <PromptBar
+        onGenerate={generate}
+        loading={loading}
+      />
+    </>
   );
 }
