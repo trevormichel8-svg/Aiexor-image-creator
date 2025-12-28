@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import PromptBar from "@/components/PromptBar";
+import ImageLightbox from "@/components/ImageLightbox";
+import SpaceBackground from "@/components/SpaceBackground";
 import { Session, createSession } from "@/lib/session";
 
 export default function HomePage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [zoomSrc, setZoomSrc] = useState<string | null>(null);
 
   const activeSession = sessions.find(s => s.id === activeId);
 
@@ -68,6 +71,8 @@ Ultra-detailed, cinematic lighting
 
   return (
     <main className="min-h-screen bg-black text-white flex">
+      <SpaceBackground />
+
       {/* Sidebar */}
       <aside className="w-64 border-r border-red-600/30 p-3 space-y-2">
         <button
@@ -92,7 +97,7 @@ Ultra-detailed, cinematic lighting
 
       {/* Canvas */}
       <section className="flex-1 relative">
-        <div className="pt-12 pb-40 px-6 max-w-5xl mx-auto space-y-8">
+        <div className="pt-12 pb-40 px-6 max-w-5xl mx-auto space-y-10">
           {activeSession?.images.map((img, i) => (
             <div
               key={i}
@@ -101,6 +106,7 @@ Ultra-detailed, cinematic lighting
             >
               <img
                 src={img.url}
+                onClick={() => setZoomSrc(img.url)}
                 className="w-full object-contain bg-black cursor-zoom-in"
               />
               <div className="text-xs text-red-300 p-2">
@@ -118,6 +124,8 @@ Ultra-detailed, cinematic lighting
 
         <PromptBar onGenerate={handleGenerate} loading={loading} />
       </section>
+
+      <ImageLightbox src={zoomSrc} onClose={() => setZoomSrc(null)} />
     </main>
   );
 }

@@ -149,3 +149,25 @@ body {
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
 }
+
+/* ===== Animated Space Background ===== */
+.space-bg {
+  background:
+    radial-gradient(1px 1px at 10% 20%, white, transparent),
+    radial-gradient(1px 1px at 80% 40%, white, transparent),
+    radial-gradient(1px 1px at 30% 70%, white, transparent),
+    radial-gradient(1px 1px at 70% 90%, white, transparent),
+    black;
+  background-size: 200px 200px;
+  animation: space-drift 60s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes space-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 1000px 1000px;
+  }
+}
