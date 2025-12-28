@@ -13,7 +13,7 @@ export default function Page() {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  async function handleGenerate(compiledPrompt: string): Promise<string> {
+  async function handleGenerate(compiledPrompt: string): Promise<void> {
     try {
       setLoading(true);
 
