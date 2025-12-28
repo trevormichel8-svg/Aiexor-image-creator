@@ -13,16 +13,16 @@ export default function PromptBar({ onGenerate, loading }: Props) {
   const [style, setStyle] = useState("Default");
   const [showStyles, setShowStyles] = useState(false);
 
-  async function handleSubmit() {
-    if (!prompt.trim() || loading) return;
+  async function submit() {
+    if (!prompt.trim()) return;
 
-    const compiledPrompt =
-      style && style !== "Default"
-        ? `${prompt} · Style: ${style}`
-        : prompt;
+    const compiled =
+      style === "Default"
+        ? prompt
+        : `${prompt} [${style} style]`;
 
-    await onGenerate(compiledPrompt);
     setPrompt("");
+    await onGenerate(compiled);
   }
 
   return (
@@ -49,16 +49,16 @@ export default function PromptBar({ onGenerate, loading }: Props) {
 
           <input
             className="prompt-input"
-            placeholder={`Ask Aiexor... (${style})`}
+            placeholder={`Ask Aiexor… (${style})`}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
           />
 
           <button
             className="prompt-generate-btn"
-            onClick={handleSubmit}
             disabled={loading}
+            onClick={submit}
           >
             ↑
           </button>
