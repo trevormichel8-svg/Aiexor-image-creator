@@ -5,55 +5,36 @@ body {
   background: black;
   color: white;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* ===== Canvas / History ===== */
-
-.canvas {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 24px 16px 140px; /* space for prompt bar */
-}
-
-.message {
-  margin-bottom: 28px;
-}
-
-.generated-image {
-  width: 100%;
-  border-radius: 16px;
-  box-shadow:
-    0 0 18px rgba(220, 38, 38, 0.6),
-    0 0 36px rgba(220, 38, 38, 0.4);
-}
-
-.caption {
-  margin-top: 8px;
-  font-size: 14px;
-  opacity: 0.75;
-}
-
-.caption .style {
-  opacity: 0.6;
-}
-
-/* Empty state */
-
-.empty-state {
+/* ===== STARFIELD BACKGROUND ===== */
+.starfield {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 40% 60%, #fff, transparent),
+    radial-gradient(1px 1px at 90% 10%, #fff, transparent);
+  animation: starDrift 120s linear infinite;
   opacity: 0.4;
-  text-align: center;
-  margin-top: 120px;
+  z-index: 0;
 }
 
-/* ===== Prompt Bar (fixed bottom) ===== */
+@keyframes starDrift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2000px); }
+}
 
+/* ===== PROMPT BAR ===== */
 .prompt-bar-wrapper {
   position: fixed;
-  bottom: 12px;
+  bottom: env(safe-area-inset-bottom, 12px);
   left: 0;
   right: 0;
   z-index: 50;
@@ -62,23 +43,24 @@ body {
   pointer-events: none;
 }
 
-.prompt-bar-glow {
+.prompt-bar {
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: calc(100% - 24px);
   max-width: 720px;
-  padding: 10px;
+  padding: 10px 12px;
   border-radius: 999px;
   background: #0b0b0b;
-  border: 1px solid rgba(255, 60, 60, 0.7);
+  border: 1px solid rgba(255, 50, 50, 0.7);
   box-shadow:
-    0 0 14px rgba(220, 38, 38, 0.8),
-    0 0 28px rgba(220, 38, 38, 0.6),
+    0 0 12px rgba(220, 38, 38, 0.8),
+    0 0 24px rgba(220, 38, 38, 0.6),
     inset 0 0 12px rgba(255, 255, 255, 0.08);
 }
 
+/* ===== INPUT ===== */
 .prompt-input {
   flex: 1;
   background: transparent;
@@ -93,22 +75,77 @@ body {
   color: rgba(255, 255, 255, 0.45);
 }
 
-.prompt-generate-btn,
-.prompt-style-btn {
+/* ===== BUTTONS ===== */
+.circle-btn {
   width: 44px;
   height: 44px;
   border-radius: 999px;
   border: none;
-  cursor: pointer;
+  background: linear-gradient(145deg, #ff2a2a, #b80000);
   color: white;
   font-size: 18px;
-  background: linear-gradient(145deg, #ff2a2a, #b80000);
+  cursor: pointer;
   box-shadow:
-    0 0 12px rgba(255, 50, 50, 0.9),
-    inset 0 0 8px rgba(255, 255, 255, 0.25);
+    0 0 10px rgba(255, 50, 50, 0.9),
+    inset 0 0 8px rgba(255, 255, 255, 0.2);
 }
 
-.prompt-generate-btn:disabled {
-  opacity: 0.6;
+.circle-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ===== IMAGE CANVAS ===== */
+.canvas {
+  position: relative;
+  z-index: 1;
+  padding: 80px 16px 120px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.image-card {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: black;
+  box-shadow:
+    0 0 20px rgba(220, 38, 38, 0.6);
+  animation: imageIn 0.4s ease-out both;
+}
+
+@keyframes imageIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.image-card img {
+  width: 100%;
+  display: block;
+}
+
+/* ===== LOADING SKELETON ===== */
+.skeleton {
+  height: 320px;
+  border-radius: 16px;
+  background: linear-gradient(
+    90deg,
+    #111 25%,
+    #222 37%,
+    #111 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  box-shadow: 0 0 16px rgba(220, 38, 38, 0.4);
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }

@@ -1,70 +1,72 @@
 "use client";
 
 import { useState } from "react";
-import PromptBar from "@/components/PromptBar";
 
-type GeneratedImage = {
-  id: string;
-  prompt: string;
-  image: string; // base64
-};
-
-export default function Page() {
-  const [images, setImages] = useState<GeneratedImage[]>([]);
+export default function HomePage() {
+  const [prompt, setPrompt] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  async function handleGenerate(compiledPrompt: string): Promise<void> {
-    try {
-      setLoading(true);
+  async function generateImage() {
+    if (!prompt || loading) return;
 
+    setLoading(true);
+
+    try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: compiledPrompt }),
+        body: JSON.stringify({ prompt }),
       });
-
-      if (!res.ok) throw new Error("Generation failed");
 
       const data = await res.json();
 
-      setImages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          prompt: compiledPrompt,
-          image: data.image, // base64 only
-        },
-      ]);
+      if (data.image) {
+        setImages((prev) => [data.image, ...prev]);
+      }
     } catch (e) {
-      console.error("Generation error:", e);
+      console.error(e);
     } finally {
       setLoading(false);
+      setPrompt("");
     }
   }
 
   return (
-    <main style={{ paddingBottom: 120 }}>
-      {images.map((img) => (
-        <div key={img.id} style={{ marginBottom: 28 }}>
-          <div style={{ opacity: 0.65, fontSize: 14 }}>
-            {img.prompt}
+    <>
+      <div className="starfield" />
+
+      <main className="canvas">
+        {loading && <div className="skeleton" />}
+
+        {images.map((src, i) => (
+          <div className="image-card" key={i}>
+            <img src={src} alt="Generated" />
           </div>
+        ))}
+      </main>
 
-          <img
-            src={`data:image/png;base64,${img.image}`}
-            alt={img.prompt}
-            style={{
-              width: "100%",
-              maxWidth: 480,
-              borderRadius: 14,
-              marginTop: 8,
-              display: "block",
-            }}
+      {/* PROMPT BAR */}
+      <div className="prompt-bar-wrapper">
+        <div className="prompt-bar">
+          <input
+            className="prompt-input"
+            placeholder="Describe an image..."
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && generateImage()}
           />
-        </div>
-      ))}
 
-      <PromptBar onGenerate={handleGenerate} loading={loading} />
-    </main>
+          <button
+            className="circle-btn"
+            onClick={generateImage}
+            disabled={loading}
+            title="Generate"
+          >
+            ➤
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
