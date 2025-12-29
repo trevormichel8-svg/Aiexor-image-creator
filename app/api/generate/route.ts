@@ -9,18 +9,16 @@ export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();
 
-    if (!prompt) {
-      return NextResponse.json(
-        { error: "Missing prompt" },
-        { status: 400 }
-      );
-    }
-
     const result = await openai.images.generate({
       model: "gpt-image-1",
       prompt,
       size: "1024x1024",
     });
+
+    // ✅ Type-safe guard (this is the fix)
+    if (!result.data || !result.data[0]?.b64_json) {
+      throw new Error("No image data returned from OpenAI");
+    }
 
     return NextResponse.json({
       image: result.data[0].b64_json,
