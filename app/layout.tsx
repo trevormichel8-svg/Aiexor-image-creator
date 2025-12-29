@@ -1,13 +1,17 @@
 import "./globals.css";
+import type { Metadata } from "next";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const metadata: Metadata = {
+  title: "Aiexor Image Creator",
+  description: "AI-powered image generation tool",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="bg-black text-white min-h-screen antialiased">
+        {children}
+      </body>
     </html>
   );
 }
