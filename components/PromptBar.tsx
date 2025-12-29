@@ -1,53 +1,69 @@
 "use client";
 
 import { useState } from "react";
+import ArtStyleSheet from "./ArtStyleSheet";
 
-type PromptBarProps = {
-  onGenerate: (prompt: string) => void;
-  loading?: boolean;
+type Props = {
+  onGenerate: (compiledPrompt: string) => Promise<void>;
+  loading: boolean;
 };
 
-export default function PromptBar({ onGenerate, loading }: PromptBarProps) {
+export default function PromptBar({ onGenerate, loading }: Props) {
   const [prompt, setPrompt] = useState("");
-  const [styleStrength, setStyleStrength] = useState(70);
+  const [style, setStyle] = useState("Default");
+  const [showStyles, setShowStyles] = useState(false);
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!prompt.trim() || loading) return;
-    onGenerate(prompt);
+
+    const compiledPrompt =
+      style && style !== "Default"
+        ? `${prompt} · Style: ${style}`
+        : prompt;
+
+    await onGenerate(compiledPrompt);
     setPrompt("");
   }
 
   return (
-    <div className="prompt-bar-wrapper">
-      <div className="prompt-bar-glow">
-        <input
-          className="prompt-input"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe your image..."
-          disabled={loading}
+    <>
+      {showStyles && (
+        <ArtStyleSheet
+          open={showStyles}
+          onSelect={(s) => {
+            setStyle(s);
+            setShowStyles(false);
+          }}
+          onClose={() => setShowStyles(false)}
         />
+      )}
 
-        <button
-          className="send-btn"
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          ➤
-        </button>
-      </div>
+      <div className="prompt-bar-wrapper">
+        <div className="prompt-bar-glow">
+          <button
+            className="prompt-generate-btn"
+            onClick={() => setShowStyles(true)}
+          >
+            +
+          </button>
 
-      <div className="style-slider">
-        <label>Style</label>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={styleStrength}
-          onChange={(e) => setStyleStrength(Number(e.target.value))}
-        />
-        <span>{styleStrength}%</span>
+          <input
+            className="prompt-input"
+            placeholder={`Ask Aiexor... (${style})`}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+          />
+
+          <button
+            className="prompt-generate-btn"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            ↑
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

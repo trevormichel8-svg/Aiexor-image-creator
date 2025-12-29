@@ -1,215 +1,114 @@
-/* ===============================
-   Base Reset
-================================ */
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
 html,
 body {
   margin: 0;
   padding: 0;
-  height: 100%;
   background: black;
   color: white;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  overscroll-behavior: none;
-  -webkit-font-smoothing: antialiased;
 }
 
-/* ===============================
-   Main App Container
-================================ */
-
-main {
-  min-height: 100vh;
-  padding-bottom: 160px; /* space for prompt bar */
-  position: relative;
-  z-index: 1;
+* {
+  box-sizing: border-box;
 }
 
-/* ===============================
-   Prompt Bar (BOTTOM FIXED)
-================================ */
+/* ===== Canvas / History ===== */
+
+.canvas {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 140px; /* space for prompt bar */
+}
+
+.message {
+  margin-bottom: 28px;
+}
+
+.generated-image {
+  width: 100%;
+  border-radius: 16px;
+  box-shadow:
+    0 0 18px rgba(220, 38, 38, 0.6),
+    0 0 36px rgba(220, 38, 38, 0.4);
+}
+
+.caption {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.caption .style {
+  opacity: 0.6;
+}
+
+/* Empty state */
+
+.empty-state {
+  opacity: 0.4;
+  text-align: center;
+  margin-top: 120px;
+}
+
+/* ===== Prompt Bar (fixed bottom) ===== */
 
 .prompt-bar-wrapper {
   position: fixed;
   bottom: 12px;
   left: 0;
   right: 0;
-  z-index: 1000;
-
+  z-index: 50;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  pointer-events: auto;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .prompt-bar-glow {
+  pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 10px;
-
-  width: 92%;
-  max-width: 540px;
-
-  padding: 12px 14px;
+  gap: 8px;
+  width: calc(100% - 24px);
+  max-width: 720px;
+  padding: 10px;
   border-radius: 999px;
-
-  background: rgba(12, 12, 12, 0.96);
-  border: 1px solid rgba(255, 50, 50, 0.7);
-
+  background: #0b0b0b;
+  border: 1px solid rgba(255, 60, 60, 0.7);
   box-shadow:
-    0 0 12px rgba(255, 0, 0, 0.8),
-    0 0 28px rgba(255, 0, 0, 0.6),
-    inset 0 0 10px rgba(255, 255, 255, 0.08);
-
-  pointer-events: auto;
+    0 0 14px rgba(220, 38, 38, 0.8),
+    0 0 28px rgba(220, 38, 38, 0.6),
+    inset 0 0 12px rgba(255, 255, 255, 0.08);
 }
-
-/* ===============================
-   Prompt Input
-================================ */
 
 .prompt-input {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
-
   color: white;
   font-size: 16px;
-  padding: 8px 10px;
-
-  pointer-events: auto;
+  padding: 10px 14px;
 }
 
 .prompt-input::placeholder {
   color: rgba(255, 255, 255, 0.45);
 }
 
-/* ===============================
-   Send Button
-================================ */
-
-.send-btn {
+.prompt-generate-btn,
+.prompt-style-btn {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-
+  border-radius: 999px;
   border: none;
   cursor: pointer;
-
-  background: linear-gradient(145deg, #ff2a2a, #b80000);
   color: white;
   font-size: 18px;
-
+  background: linear-gradient(145deg, #ff2a2a, #b80000);
   box-shadow:
     0 0 12px rgba(255, 50, 50, 0.9),
     inset 0 0 8px rgba(255, 255, 255, 0.25);
-
-  pointer-events: auto;
 }
 
-.send-btn:disabled {
+.prompt-generate-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-/* ===============================
-   Style Slider
-================================ */
-
-.style-slider {
-  margin-top: 10px;
-  width: 85%;
-  max-width: 380px;
-
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  font-size: 14px;
-  color: white;
-
-  pointer-events: auto;
-}
-
-.style-slider label {
-  opacity: 0.8;
-}
-
-.style-slider input[type="range"] {
-  flex: 1;
-  height: 6px;
-
-  appearance: none;
-  background: linear-gradient(
-    to right,
-    #ff2a2a 0%,
-    #ff2a2a 50%,
-    #444 50%,
-    #444 100%
-  );
-
-  border-radius: 999px;
-  outline: none;
-
-  pointer-events: auto;
-  touch-action: pan-x;
-}
-
-.style-slider input[type="range"]::-webkit-slider-thumb {
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #ff2a2a;
-  box-shadow: 0 0 10px rgba(255, 0, 0, 0.9);
-  cursor: pointer;
-}
-
-.style-slider span {
-  width: 36px;
-  text-align: right;
-  opacity: 0.8;
-}
-
-/* ===============================
-   Image History / Canvas
-================================ */
-
-.image-history {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-}
-
-.image-card {
-  max-width: 100%;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #111;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
-}
-
-.image-card img {
-  width: 100%;
-  display: block;
-}
-
-/* ===============================
-   Safety: NEVER BLOCK INTERACTION
-================================ */
-
-button,
-input,
-textarea,
-label {
-  pointer-events: auto;
 }
