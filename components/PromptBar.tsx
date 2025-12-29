@@ -1,83 +1,53 @@
 "use client";
 
 import { useState } from "react";
-import ArtStyleSheet from "./ArtStyleSheet";
 
-type Props = {
-  onGenerate: (prompt: string, style: string, strength: number) => void;
-  loading: boolean;
+type PromptBarProps = {
+  onGenerate: (prompt: string) => void;
+  loading?: boolean;
 };
 
-export default function PromptBar({ onGenerate, loading }: Props) {
+export default function PromptBar({ onGenerate, loading }: PromptBarProps) {
   const [prompt, setPrompt] = useState("");
-  const [style, setStyle] = useState("Photorealistic");
-  const [strength, setStrength] = useState(70);
-  const [showStyles, setShowStyles] = useState(false);
+  const [styleStrength, setStyleStrength] = useState(70);
 
-  function submit() {
+  function handleSubmit() {
     if (!prompt.trim() || loading) return;
-    onGenerate(prompt, style, strength);
+    onGenerate(prompt);
     setPrompt("");
   }
 
   return (
-    <>
-      {showStyles && (
-        <ArtStyleSheet
-          open={showStyles}
-          onSelect={s => {
-            setStyle(s);
-            setShowStyles(false);
-          }}
-          onClose={() => setShowStyles(false)}
+    <div className="prompt-bar-wrapper">
+      <div className="prompt-bar-glow">
+        <input
+          className="prompt-input"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="Describe your image..."
+          disabled={loading}
         />
-      )}
 
-      <div className="prompt-bar-wrapper">
-        <div className="prompt-bar-glow">
-          {/* Style button */}
-          <button
-            onClick={() => setShowStyles(true)}
-            className="prompt-generate-btn"
-            title="Art Style"
-          >
-            🎨
-          </button>
-
-          {/* Input */}
-          <input
-            value={prompt}
-            onChange={e => setPrompt(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && submit()}
-            placeholder="Describe your image..."
-            className="prompt-input"
-          />
-
-          {/* Generate */}
-          <button
-            onClick={submit}
-            disabled={loading}
-            className="prompt-generate-btn"
-            title="Generate"
-          >
-            {loading ? "…" : "➜"}
-          </button>
-        </div>
-
-        {/* Strength slider */}
-        <div className="mt-2 flex items-center gap-2 text-xs text-red-400 justify-center">
-          <span>Style</span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={strength}
-            onChange={e => setStrength(+e.target.value)}
-            className="w-40 accent-red-600"
-          />
-          <span>{strength}%</span>
-        </div>
+        <button
+          className="send-btn"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          ➤
+        </button>
       </div>
-    </>
+
+      <div className="style-slider">
+        <label>Style</label>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={styleStrength}
+          onChange={(e) => setStyleStrength(Number(e.target.value))}
+        />
+        <span>{styleStrength}%</span>
+      </div>
+    </div>
   );
 }
