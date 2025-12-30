@@ -1,3 +1,26 @@
+/* ===============================
+   THEME VARIABLES
+================================ */
+
+:root {
+  --bg-black: #050505;
+
+  --red-main: #ff1e1e;
+  --red-soft: rgba(255, 30, 30, 0.55);
+
+  --glow-soft: 0 0 10px rgba(255, 30, 30, 0.45);
+  --glow-medium: 0 0 18px rgba(255, 30, 30, 0.7);
+  --glow-strong: 0 0 28px rgba(255, 30, 30, 0.95);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-pill: 999px;
+}
+
+/* ===============================
+   BASE RESET
+================================ */
+
 html,
 body {
   margin: 0;
@@ -11,12 +34,124 @@ body {
   box-sizing: border-box;
 }
 
-/* ===== Canvas / History ===== */
+/* ===============================
+   STEP 2 — BASE UI ELEMENTS
+   (ALL NEW ELEMENTS AUTO-INHERIT)
+================================ */
+
+button {
+  background: var(--bg-black);
+  color: white;
+  border: 1px solid var(--red-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glow-soft);
+  cursor: pointer;
+
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+button:hover {
+  box-shadow: var(--glow-medium);
+  border-color: var(--red-main);
+}
+
+button:active {
+  transform: scale(0.96);
+  box-shadow: var(--glow-strong);
+}
+
+input,
+select,
+textarea {
+  background: var(--bg-black);
+  color: white;
+  border: 1px solid var(--red-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glow-soft);
+  outline: none;
+
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  box-shadow: var(--glow-medium);
+  border-color: var(--red-main);
+}
+
+/* ===============================
+   STEP 3 — GLOW UTILITIES
+================================ */
+
+.glow-soft {
+  box-shadow: var(--glow-soft) !important;
+}
+
+.glow-medium {
+  box-shadow: var(--glow-medium) !important;
+}
+
+.glow-strong {
+  box-shadow: var(--glow-strong) !important;
+}
+
+.rounded-pill {
+  border-radius: var(--radius-pill) !important;
+}
+
+/* ===============================
+   STEP 4 — SLIDER STYLING
+================================ */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--red-main);
+  box-shadow: var(--glow-soft);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--red-main);
+  box-shadow: var(--glow-strong);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--red-main);
+  box-shadow: var(--glow-strong);
+  cursor: pointer;
+}
+
+/* ===============================
+   CANVAS / HISTORY
+================================ */
 
 .canvas {
   max-width: 720px;
   margin: 0 auto;
-  padding: 24px 16px 140px; /* space for prompt bar */
+  padding: 24px 16px 140px;
 }
 
 .message {
@@ -37,19 +172,9 @@ body {
   opacity: 0.75;
 }
 
-.caption .style {
-  opacity: 0.6;
-}
-
-/* Empty state */
-
-.empty-state {
-  opacity: 0.4;
-  text-align: center;
-  margin-top: 120px;
-}
-
-/* ===== Prompt Bar (fixed bottom) ===== */
+/* ===============================
+   PROMPT BAR
+================================ */
 
 .prompt-bar-wrapper {
   position: fixed;
@@ -59,101 +184,43 @@ body {
   z-index: 50;
   display: flex;
   justify-content: center;
-
-  /* ✅ CRITICAL FIX */
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .prompt-bar-glow {
+  pointer-events: auto;
   display: flex;
   align-items: center;
   gap: 8px;
   width: calc(100% - 24px);
   max-width: 720px;
   padding: 10px;
-  border-radius: 999px;
-  background: #0b0b0b;
-  border: 1px solid rgba(255, 60, 60, 0.7);
-  box-shadow:
-    0 0 14px rgba(220, 38, 38, 0.8),
-    0 0 28px rgba(220, 38, 38, 0.6),
-    inset 0 0 12px rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-pill);
+  background: var(--bg-black);
+  border: 1px solid var(--red-soft);
+  box-shadow: var(--glow-strong);
 }
 
-.prompt-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: white;
-  font-size: 16px;
-  padding: 10px 14px;
-}
-
-.prompt-input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.prompt-generate-btn,
-.prompt-style-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  color: white;
-  font-size: 18px;
-  background: linear-gradient(145deg, #ff2a2a, #b80000);
-  box-shadow:
-    0 0 12px rgba(255, 50, 50, 0.9),
-    inset 0 0 8px rgba(255, 255, 255, 0.25);
-}
-
-.prompt-generate-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ===== Sidebar Button (ONLY ONE) ===== */
+/* ===============================
+   SIDEBAR
+================================ */
 
 .sidebar-button {
   position: fixed;
-  top: env(safe-area-inset-top, 12px);
+  top: 12px;
   left: 12px;
   z-index: 9999;
 
   width: 44px;
   height: 44px;
-
   border-radius: 12px;
-  border: none;
 
-  background: rgba(20, 20, 20, 0.9);
-
-  color: #ff2a2a; /* 🔴 RED ICON */
+  background: var(--bg-black);
+  color: var(--red-main);
   font-size: 22px;
   font-weight: bold;
 
-  box-shadow:
-    0 0 12px rgba(255, 42, 42, 0.8),
-    0 0 24px rgba(255, 42, 42, 0.6),
-    inset 0 0 6px rgba(255, 255, 255, 0.1);
-
-  cursor: pointer;
-}
-
-.sidebar-button:active {
-  transform: scale(0.95);
-}
-  
-
-/* ===== Sidebar ===== */
-
-.sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 40;
+  box-shadow: var(--glow-medium);
 }
 
 .sidebar {
@@ -162,65 +229,19 @@ body {
   left: 0;
   height: 100%;
   width: 280px;
-  background: #050505;
-  border-right: 1px solid rgba(255, 0, 0, 0.4);
+  background: var(--bg-black);
+  border-right: 1px solid var(--red-soft);
   transform: translateX(-100%);
   transition: transform 0.25s ease;
   z-index: 50;
-  display: flex;
-  flex-direction: column;
 }
 
 .sidebar.open {
   transform: translateX(0);
 }
 
-.sidebar-header,
-.sidebar-footer {
-  padding: 12px;
-  border-bottom: 1px solid rgba(255, 0, 0, 0.2);
-  display: flex;
-  justify-content: space-between;
-}
-
-.sidebar-content {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.sidebar-item {
-  display: flex;
-  gap: 10px;
-  padding: 10px;
-  width: 100%;
-  background: transparent;
-  color: white;
-  border: none;
-  text-align: left;
-}
-
-.sidebar-item img {
-  width: 48px;
-  height: 48px;
-  object-fit: cover;
-  border-radius: 6px;
-}
-
-.sidebar-item:hover {
-  background: rgba(255, 0, 0, 0.1);
-}
-
-.sidebar-footer .danger {
-  width: 100%;
-  background: #300;
-  color: #f55;
-  border: none;
-  padding: 8px;
-}
-
 /* ===============================
    INTERACTION RECOVERY (CRITICAL)
-   DO NOT REMOVE
 ================================ */
 
 body,
@@ -246,157 +267,9 @@ input[type="range"] {
   touch-action: pan-x;
 }
 
-/* visual-only layers */
 .overlay,
 .backdrop,
 .glow,
 .blur {
   pointer-events: none;
-}
-
-/* ===== Sidebar Controls (Red Glow) ===== */
-
-.sidebar-label {
-  display: block;
-  margin: 16px 12px 6px;
-  font-size: 13px;
-  opacity: 0.8;
-}
-
-.sidebar-select {
-  margin: 0 12px 18px;
-  width: calc(100% - 24px);
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: #0b0b0b;
-  color: white;
-  border: 1px solid rgba(255, 60, 60, 0.8);
-  box-shadow:
-    0 0 12px rgba(255, 40, 40, 0.7),
-    inset 0 0 6px rgba(255, 255, 255, 0.08);
-  outline: none;
-}
-
-.sidebar-select:focus {
-  box-shadow:
-    0 0 18px rgba(255, 60, 60, 1),
-    inset 0 0 8px rgba(255, 255, 255, 0.15);
-}
-
-.sidebar-slider {
-  margin: 0 12px 24px;
-  width: calc(100% - 24px);
-  appearance: none;
-  height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    #ff2a2a 0%,
-    #b80000 100%
-  );
-  box-shadow: 0 0 10px rgba(255, 40, 40, 0.8);
-}
-
-.sidebar-slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #ff2a2a;
-  box-shadow: 0 0 14px rgba(255, 50, 50, 1);
-  cursor: pointer;
-}
-
-.sidebar-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #ff2a2a;
-  box-shadow: 0 0 14px rgba(255, 50, 50, 1);
-  cursor: pointer;
-}
-
-/* ===============================
-   UI RED GLOW ENHANCEMENTS
-================================ */
-
-/* ===== Art Style Select ===== */
-
-.art-style-select {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 999px;
-  background: #0b0b0b;
-  color: white;
-  border: 1px solid rgba(255, 60, 60, 0.8);
-  font-size: 16px;
-
-  box-shadow:
-    0 0 14px rgba(255, 0, 0, 0.8),
-    0 0 28px rgba(255, 0, 0, 0.4),
-    inset 0 0 8px rgba(255, 255, 255, 0.08);
-
-  appearance: none;
-  outline: none;
-}
-
-.art-style-select:focus {
-  box-shadow:
-    0 0 18px rgba(255, 0, 0, 1),
-    0 0 36px rgba(255, 0, 0, 0.7);
-}
-
-/* ===== Style Strength Slider ===== */
-
-input[type="range"] {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 6px;
-  border-radius: 999px;
-  background: #ff2a2a;
-  outline: none;
-}
-
-/* Slider Thumb */
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #ff2a2a;
-  box-shadow:
-    0 0 12px rgba(255, 0, 0, 0.9),
-    0 0 24px rgba(255, 0, 0, 0.6);
-  cursor: pointer;
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #ff2a2a;
-  box-shadow:
-    0 0 12px rgba(255, 0, 0, 0.9),
-    0 0 24px rgba(255, 0, 0, 0.6);
-}
-
-/* ===== Sidebar Close Button (X) ===== */
-
-.sidebar-close-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  border: none;
-  background: #111;
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-
-  box-shadow:
-    0 0 12px rgba(255, 0, 0, 0.8),
-    inset 0 0 6px rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-close-btn:active {
-  transform: scale(0.95);
 }

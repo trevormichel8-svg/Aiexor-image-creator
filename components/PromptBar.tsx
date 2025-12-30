@@ -4,66 +4,66 @@ import { useState } from "react";
 import ArtStyleSheet from "./ArtStyleSheet";
 
 type Props = {
-  onGenerate: (compiledPrompt: string) => Promise<void>;
+  onGenerate: (compiledPrompt: string) => void;
   loading: boolean;
 };
 
 export default function PromptBar({ onGenerate, loading }: Props) {
   const [prompt, setPrompt] = useState("");
-  const [style, setStyle] = useState("Default");
-  const [showStyles, setShowStyles] = useState(false);
+  const [style, setStyle] = useState("None");
+  const [strength, setStrength] = useState(0.7);
+  const [open, setOpen] = useState(false);
 
-  async function handleSubmit() {
-    if (!prompt.trim() || loading) return;
+  function handleGenerate() {
+    if (!prompt.trim()) return;
 
     const compiledPrompt =
-      style && style !== "Default"
-        ? `${prompt} · Style: ${style}`
-        : prompt;
+      style === "None"
+        ? prompt
+        : `${prompt}, art style: ${style}, style strength ${strength}`;
 
-    await onGenerate(compiledPrompt);
+    onGenerate(compiledPrompt);
     setPrompt("");
   }
 
   return (
     <>
-      {showStyles && (
-        <ArtStyleSheet
-          open={showStyles}
-          onSelect={(s) => {
-            setStyle(s);
-            setShowStyles(false);
-          }}
-          onClose={() => setShowStyles(false)}
-        />
-      )}
-
       <div className="prompt-bar-wrapper">
         <div className="prompt-bar-glow">
           <button
-            className="prompt-generate-btn"
-            onClick={() => setShowStyles(true)}
+            className="prompt-style-btn"
+            onClick={() => setOpen(true)}
+            title="Art styles"
           >
             +
           </button>
 
           <input
             className="prompt-input"
-            placeholder={`Ask Aiexor... (${style})`}
+            placeholder="Describe the image…"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
           />
 
           <button
             className="prompt-generate-btn"
-            onClick={handleSubmit}
+            onClick={handleGenerate}
             disabled={loading}
           >
-            ↑
+            →
           </button>
         </div>
       </div>
+
+      <ArtStyleSheet
+        open={open}
+        selected={style}
+        strength={strength}
+        onSelect={setStyle}
+        onStrength={setStrength}
+        onClose={() => setOpen(false)}
+      />
     </>
   );
 }
