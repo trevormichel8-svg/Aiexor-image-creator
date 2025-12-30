@@ -1,25 +1,8 @@
-/* ===============================
-   ROOT THEME TOKENS (LOCKED)
-================================ */
-:root {
-  --bg-black: #000;
-  --panel-black: #0b0b0b;
-  --neon-red: #ff2a2a;
-  --neon-red-soft: rgba(255, 42, 42, 0.6);
-  --neon-red-strong: rgba(255, 42, 42, 0.9);
-  --radius-pill: 999px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
-}
-
-/* ===============================
-   GLOBAL RESET
-================================ */
 html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg-black);
+  background: black;
   color: white;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -29,64 +12,47 @@ body {
 }
 
 /* ===============================
-   UNIVERSAL NEON INHERITANCE
-   (ALL BUTTONS / INPUTS / MENUS)
+   CANVAS / HISTORY
 ================================ */
-button,
-input,
-select,
-textarea {
-  background: var(--panel-black);
-  color: white;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--neon-red-soft);
-  box-shadow:
-    0 0 10px var(--neon-red-soft),
-    inset 0 0 8px rgba(255,255,255,0.08);
-  transition: box-shadow 0.2s ease, transform 0.15s ease;
-}
 
-button:hover,
-select:hover {
-  box-shadow:
-    0 0 16px var(--neon-red-strong),
-    inset 0 0 10px rgba(255,255,255,0.12);
-}
-
-button:active {
-  transform: scale(0.96);
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  box-shadow:
-    0 0 18px var(--neon-red-strong),
-    inset 0 0 12px rgba(255,255,255,0.12);
-}
-
-/* ===============================
-   CANVAS / CONTENT
-================================ */
 .canvas {
   max-width: 720px;
   margin: 0 auto;
   padding: 24px 16px 140px;
 }
 
+.message {
+  margin-bottom: 28px;
+}
+
+.generated-image {
+  width: 100%;
+  border-radius: 16px;
+  box-shadow:
+    0 0 18px rgba(220, 38, 38, 0.6),
+    0 0 36px rgba(220, 38, 38, 0.4);
+}
+
+.caption {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.caption .style {
+  opacity: 0.6;
+}
+
 .empty-state {
-  height: calc(100vh - 160px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   opacity: 0.4;
-  font-size: 18px;
+  text-align: center;
+  margin-top: 120px;
 }
 
 /* ===============================
    PROMPT BAR
 ================================ */
+
 .prompt-bar-wrapper {
   position: fixed;
   bottom: 12px;
@@ -106,52 +72,90 @@ textarea:focus {
   width: calc(100% - 24px);
   max-width: 720px;
   padding: 10px;
-  border-radius: var(--radius-pill);
-  background: var(--panel-black);
-  border: 1px solid var(--neon-red);
+  border-radius: 999px;
+  background: #0b0b0b;
+  border: 1px solid rgba(255, 60, 60, 0.7);
   box-shadow:
-    0 0 18px var(--neon-red-strong),
-    inset 0 0 12px rgba(255,255,255,0.1);
+    0 0 14px rgba(220, 38, 38, 0.8),
+    0 0 28px rgba(220, 38, 38, 0.6),
+    inset 0 0 12px rgba(255, 255, 255, 0.08);
 }
 
 .prompt-input {
   flex: 1;
-  border: none;
   background: transparent;
+  border: none;
+  outline: none;
+  color: white;
   font-size: 16px;
-  padding: 12px 14px;
+  padding: 10px 14px;
 }
 
 .prompt-input::placeholder {
-  color: rgba(255,255,255,0.45);
+  color: rgba(255, 255, 255, 0.45);
 }
 
-/* ===============================
-   SIDEBAR BUTTON (HAMBURGER)
-================================ */
-.sidebar-button {
-  position: fixed;
-  top: env(safe-area-inset-top, 12px);
-  left: 12px;
-  z-index: 9999;
+.prompt-generate-btn,
+.prompt-style-btn {
   width: 44px;
   height: 44px;
-  font-size: 22px;
-  color: var(--neon-red);
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  color: white;
+  font-size: 18px;
+  background: linear-gradient(145deg, #ff2a2a, #b80000);
+  box-shadow:
+    0 0 12px rgba(255, 50, 50, 0.9),
+    inset 0 0 8px rgba(255, 255, 255, 0.25);
+}
+
+.prompt-generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ===============================
    SIDEBAR
 ================================ */
+
+.sidebar-button {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 60;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(20, 20, 20, 0.85);
+  color: red;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow:
+    0 0 12px rgba(255, 0, 0, 0.6),
+    inset 0 0 6px rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 40;
+}
+
 .sidebar {
   position: fixed;
-  inset: 0 auto 0 0;
+  top: 0;
+  left: 0;
+  height: 100%;
   width: 280px;
   background: #050505;
-  border-right: 1px solid var(--neon-red-soft);
+  border-right: 1px solid rgba(255, 0, 0, 0.4);
   transform: translateX(-100%);
-  transition: transform .25s ease;
-  z-index: 60;
+  transition: transform 0.25s ease;
+  z-index: 50;
   display: flex;
   flex-direction: column;
 }
@@ -162,68 +166,87 @@ textarea:focus {
 
 .sidebar-header {
   padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  font-size: 20px;
+  font-weight: bold;
 }
 
 .sidebar-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  color: var(--neon-red);
+  border: none;
+  background: #111;
+  color: red;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.8);
 }
 
 /* ===============================
-   ART STYLE DROPDOWN (ROUNDED)
+   SIDEBAR CONTENT
 ================================ */
-select {
-  padding: 14px 16px;
+
+.sidebar-content {
+  padding: 18px;
+}
+
+/* === ART STYLE SELECT === */
+.sidebar-content select {
+  width: 100%;
+  padding: 14px 18px;
   font-size: 16px;
+  margin-bottom: 28px; /* ✅ MORE SPACE BELOW MENU */
+  border-radius: 999px;
+  border: 1px solid rgba(255, 0, 0, 0.6);
+  background: #0b0b0b;
+  color: white;
+  box-shadow:
+    0 0 14px rgba(255, 0, 0, 0.6),
+    inset 0 0 8px rgba(255, 255, 255, 0.1);
   appearance: none;
 }
 
-/* ===============================
-   PERFECT RED SLIDER
-================================ */
-input[type="range"] {
-  -webkit-appearance: none;
+/* === SLIDER LABEL === */
+.sidebar-content .strength-label {
+  margin-bottom: 8px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* === SLIDER === */
+.sidebar-content input[type="range"] {
   width: 100%;
+  margin-top: 16px;   /* ✅ MORE SPACE ABOVE SLIDER */
+  margin-bottom: 10px;
   height: 6px;
+  border-radius: 999px;
   background: linear-gradient(
     to right,
-    var(--neon-red) 0%,
-    var(--neon-red) var(--range-fill, 70%),
+    #ff2a2a 0%,
+    #ff2a2a var(--range-fill, 70%),
     #333 var(--range-fill, 70%),
     #333 100%
   );
-  border-radius: 999px;
-  box-shadow: 0 0 14px var(--neon-red-soft);
+  box-shadow: 0 0 14px rgba(255, 0, 0, 0.6);
 }
 
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
+.sidebar-content input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--neon-red);
-  box-shadow:
-    0 0 18px var(--neon-red-strong),
-    inset 0 0 6px rgba(255,255,255,0.4);
+  background: #ff2a2a;
+  box-shadow: 0 0 16px rgba(255, 0, 0, 0.9);
   cursor: pointer;
 }
 
-input[type="range"]::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--neon-red);
-  box-shadow: 0 0 18px var(--neon-red-strong);
-}
-
 /* ===============================
-   INTERACTION LOCK (CRITICAL)
+   INTERACTION RECOVERY
 ================================ */
+
 body,
 main,
 #__next,
@@ -234,8 +257,7 @@ main,
 button,
 input,
 select,
-textarea,
-label {
+textarea {
   pointer-events: auto !important;
   touch-action: manipulation;
 }
