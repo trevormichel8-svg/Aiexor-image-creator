@@ -2,86 +2,85 @@
 
 import { useState } from "react";
 import PromptBar from "@/components/PromptBar";
-import SidebarButton from "@/components/SidebarButton";
 
-/* Optional sidebar stub (safe even if you replace later) */
-function Sidebar({ onClose }: { onClose: () => void }) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        height: "100vh",
-        width: "280px",
-        background: "#0b0b0b",
-        zIndex: 2147483646,
-        boxShadow: "4px 0 30px rgba(255,0,0,0.35)",
-        padding: "16px",
-      }}
-    >
-      <button
-        onClick={onClose}
-        style={{
-          background: "none",
-          border: "none",
-          color: "#fff",
-          fontSize: "20px",
-          marginBottom: "20px",
-        }}
-      >
-        ✕ Close
-      </button>
-
-      <div style={{ color: "#aaa" }}>
-        <p>History</p>
-        <p>Styles</p>
-        <p>Settings</p>
-      </div>
-    </div>
-  );
-}
+type GeneratedImage = {
+  id: string;
+  prompt: string;
+  style: string;
+  image: string;
+};
 
 export default function Page() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [images, setImages] = useState<GeneratedImage[]>([]);
   const [loading, setLoading] = useState(false);
 
-  /* Example generate handler (keep or replace with yours) */
-  const handleGenerate = async (
+  // 🔥 REAL generator (internal)
+  async function handleGenerateInternal(
     prompt: string,
     style: string,
     strength: number
-  ) => {
+  ) {
     setLoading(true);
+
     try {
-      // your existing generate logic
-      console.log({ prompt, style, strength });
+      const compiledPrompt =
+        strength > 0
+          ? `${prompt}, ${style}, style strength ${strength}%`
+          : `${prompt}, ${style}`;
+
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: compiledPrompt }),
+      });
+
+      const data = await res.json();
+
+      if (!data?.image) return;
+
+      setImages((prev) => [
+        {
+          id: crypto.randomUUID(),
+          prompt,
+          style,
+          image: `data:image/png;base64,${data.image}`,
+        },
+        ...prev,
+      ]);
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  // ✅ ADAPTER — matches PromptBar type EXACTLY
+  async function handleGenerate(compiledPrompt: string) {
+    // split back out (PromptBar controls formatting)
+    await handleGenerateInternal(compiledPrompt, "Default", 100);
+  }
 
   return (
     <>
-      {/* 🔴 STEP 2: SIDEBAR BUTTON MUST LIVE HERE */}
-      <SidebarButton onClick={() => setSidebarOpen(true)} />
+      <main className="canvas">
+        {images.length === 0 && (
+          <div className="empty-state">Generate your first image</div>
+        )}
 
-      {/* Sidebar */}
-      {sidebarOpen && <Sidebar onClose={() => setSidebarOpen(false)} />}
-
-      {/* Main app content */}
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "black",
-          paddingBottom: "120px",
-        }}
-      >
-        {/* Image canvas / history goes here */}
-
-        {/* Prompt bar */}
-        <PromptBar onGenerate={handleGenerate} loading={loading} />
+        {images.map((img) => (
+          <div key={img.id} className="message">
+            <img
+              src={img.image}
+              alt={img.prompt}
+              className="generated-image"
+            />
+            <div className="caption">
+              {img.prompt} · <span className="style">{img.style}</span>
+            </div>
+          </div>
+        ))}
       </main>
+
+      {/* ✅ PromptBar now receives EXACTLY what it expects */}
+      <PromptBar onGenerate={handleGenerate} loading={loading} />
     </>
   );
 }
