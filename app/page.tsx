@@ -3,96 +3,140 @@
 import { useState } from "react";
 import PromptBar from "@/components/PromptBar";
 
-/**
- * COMPLETE ART STYLE LIST
- * (safe strings only – no special characters that break prompts)
- */
+type GeneratedImage = {
+  id: string;
+  url: string;
+  prompt: string;
+  style: string;
+  strength: number;
+};
+
 const ART_STYLES = [
   "Default",
-  "Anime",
-  "Dark Anime",
-  "Chibi",
-  "Isometric",
-  "Cyberpunk",
-  "Fantasy",
-  "High Fantasy",
-  "Dark Fantasy",
-  "Mythology",
-  "Greek Mythology",
-  "Norse Mythology",
-  "Egyptian Mythology",
-  "Nebula",
-  "Cosmic",
-  "Space Art",
-  "Oil Painting",
-  "Watercolor",
-  "Ink Illustration",
-  "Charcoal Sketch",
-  "Concept Art",
-  "Digital Painting",
   "Photorealistic",
-  "Hyperrealistic",
+  "Ultra Realistic",
   "Cinematic",
+  "HDR",
   "Studio Lighting",
   "Portrait Photography",
+  "Macro Photography",
+  "Long Exposure",
+  "Bokeh",
+  "Film Grain",
+  "Analog Photo",
+  "Polaroid",
+  "Infrared",
+  "Night Photography",
+  "Digital Art",
+  "Concept Art",
+  "Matte Painting",
+  "Environment Art",
+  "Character Design",
+  "Game Art",
+  "Illustration",
+  "Anime",
+  "Chibi",
+  "Manga",
+  "Cyberpunk",
+  "Steampunk",
+  "Dieselpunk",
+  "Biopunk",
+  "Solarpunk",
+  "Fantasy",
+  "Dark Fantasy",
+  "Epic Fantasy",
+  "High Fantasy",
+  "Mythology",
+  "Sci-Fi",
+  "Space Opera",
+  "Retro Futurism",
+  "Vaporwave",
+  "Synthwave",
+  "Oil Painting",
+  "Acrylic Painting",
+  "Watercolor",
+  "Ink Drawing",
+  "Charcoal Sketch",
+  "Pencil Drawing",
+  "Graphite Sketch",
+  "Abstract",
+  "Surrealism",
+  "Minimalism",
+  "Expressionism",
+  "Impressionism",
+  "Cubism",
+  "Pop Art",
   "Pixel Art",
-  "Voxel Art",
+  "Isometric",
   "Low Poly",
+  "Voxel Art",
   "3D Render",
   "Octane Render",
   "Unreal Engine",
-  "Comic Book",
-  "Manga",
-  "Graphic Novel",
+  "Unity Engine",
+  "Blender Render",
+  "ZBrush Sculpt",
+  "Clay Render",
+  "Wireframe",
+  "Blueprint",
   "Line Art",
-  "Minimalist",
-  "Surreal",
-  "Abstract",
-  "Synthwave",
-  "Vaporwave",
-  "Retrofuturism",
-  "Steampunk",
-  "Gothic",
-  "Baroque",
-  "Renaissance",
-  "Medieval",
-  "Art Nouveau",
-  "Pop Art",
+  "Vector Art",
+  "Flat Design",
+  "UI Illustration",
+  "Icon Design",
+  "Sticker Style",
+  "Tattoo Design",
   "Graffiti",
   "Street Art",
-  "Ukiyo-e",
-  "Traditional Chinese Painting",
-  "Traditional Japanese Painting",
-  "Fantasy Illustration",
-  "Sci-Fi Illustration",
+  "Album Cover",
+  "Poster Design",
+  "Concept Sketch",
+  "Architectural Visualization",
+  "Interior Design Render",
+  "Product Render",
+  "Fashion Illustration",
+  "Editorial Illustration",
+  "Children’s Book Illustration",
+  "Comic Book Style",
 ];
 
 export default function Page() {
+  const [images, setImages] = useState<GeneratedImage[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [style, setStyle] = useState("Default");
   const [strength, setStrength] = useState(70);
-  const [loading, setLoading] = useState(false);
 
-  /**
-   * IMPORTANT:
-   * PromptBar expects: onGenerate(prompt: string)
-   * We inject style + strength HERE
-   */
   async function handleGenerate(prompt: string) {
+    if (!prompt || loading) return;
     setLoading(true);
 
     try {
-      await fetch("/api/generate", {
+      const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt,
-          style,
-          strength,
+          prompt: `${prompt}. Art style: ${style}. Style strength: ${strength}%.`,
         }),
       });
+
+      const data = await res.json();
+
+      if (data?.image) {
+        setImages((prev) => [
+          {
+            id: crypto.randomUUID(),
+            url: `data:image/png;base64,${data.image}`,
+            prompt,
+            style,
+            strength,
+          },
+          ...prev,
+        ]);
+      }
     } catch (err) {
-      console.error("Generate failed:", err);
+      console.error("Generation error:", err);
     } finally {
       setLoading(false);
     }
@@ -100,67 +144,78 @@ export default function Page() {
 
   return (
     <>
-      {/* SIDEBAR TOGGLE */}
-      <button
-        className="sidebar-button"
-        onClick={() => setSidebarOpen(true)}
-        aria-label="Open settings"
-      >
-        ☰
-      </button>
-
-      {/* SIDEBAR */}
-      {sidebarOpen && (
-        <>
-          <div
-            className="sidebar-overlay"
-            onClick={() => setSidebarOpen(false)}
-          />
-
-          <aside className="sidebar open">
-            <div className="sidebar-header">
-              <strong>Settings</strong>
-              <button onClick={() => setSidebarOpen(false)}>✕</button>
-            </div>
-
-            <div className="sidebar-content">
-              {/* ART STYLE */}
-              <label className="sidebar-label">Art Style</label>
-              <select
-                className="sidebar-select"
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-              >
-                {ART_STYLES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-
-              {/* STYLE STRENGTH */}
-              <label className="sidebar-label">
-                Style Strength: {strength}%
-              </label>
-              <input
-                className="sidebar-slider"
-                type="range"
-                min={0}
-                max={100}
-                value={strength}
-                onChange={(e) => setStrength(Number(e.target.value))}
-              />
-            </div>
-          </aside>
-        </>
+      {/* Hamburger Button */}
+      {!sidebarOpen && (
+        <button
+          className="sidebar-button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open settings"
+        >
+          ☰
+        </button>
       )}
 
-      {/* MAIN CANVAS */}
+      {/* Overlay */}
+      {sidebarOpen && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className="sidebar-header">
+          <strong>Settings</strong>
+          <button onClick={() => setSidebarOpen(false)}>✕</button>
+        </div>
+
+        <div className="sidebar-content">
+          <label>Art Style</label>
+          <select
+            className="style-select"
+            value={style}
+            onChange={(e) => setStyle(e.target.value)}
+          >
+            {ART_STYLES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+
+          <label>Style Strength: {strength}%</label>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={strength}
+            onChange={(e) => setStrength(Number(e.target.value))}
+          />
+        </div>
+      </aside>
+
+      {/* Canvas */}
       <main className="canvas">
-        <div className="empty-state">Generate your first image</div>
+        {images.length === 0 && (
+          <div className="empty-state">Generate your first image</div>
+        )}
+
+        {images.map((img) => (
+          <div key={img.id} className="message">
+            <img src={img.url} className="generated-image" />
+            <div className="caption">
+              {img.prompt}
+              <br />
+              <span className="style">
+                {img.style} · {img.strength}%
+              </span>
+            </div>
+          </div>
+        ))}
       </main>
 
-      {/* PROMPT BAR (UNCHANGED API) */}
+      {/* Prompt Bar */}
       <PromptBar onGenerate={handleGenerate} loading={loading} />
     </>
   );
