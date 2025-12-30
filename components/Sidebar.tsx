@@ -1,11 +1,14 @@
 "use client";
 
+import { ReactNode } from "react";
+
 type SidebarProps = {
   open: boolean;
   onClose: () => void;
+  children: ReactNode;
 };
 
-export default function Sidebar({ open, onClose }: SidebarProps) {
+export default function Sidebar({ open, onClose, children }: SidebarProps) {
   if (!open) return null;
 
   return (
@@ -23,7 +26,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </div>
 
         <div className="sidebar-content">
-          {/* Art style + slider live here (Step 2 & 3) */}
+          {children}
         </div>
       </aside>
     </>
