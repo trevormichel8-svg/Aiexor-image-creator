@@ -273,3 +273,31 @@ input[type="range"] {
 .blur {
   pointer-events: none;
 }
+
+/* === GLOBAL NEON THEME === */
+
+select,
+input[type="range"],
+.sidebar-close {
+  background: #0b0b0b;
+  color: white;
+  border-radius: 999px;
+  border: 1px solid rgba(255,0,0,.7);
+  box-shadow:
+    0 0 12px rgba(255,0,0,.6),
+    inset 0 0 6px rgba(255,255,255,.1);
+}
+
+input[type="range"] {
+  accent-color: red;
+}
+
+.sidebar-close {
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+}
+
+.sidebar-button {
+  color: red;
+}

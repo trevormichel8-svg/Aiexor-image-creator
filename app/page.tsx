@@ -2,58 +2,86 @@
 
 import { useState } from "react";
 import PromptBar from "@/components/PromptBar";
-
-type HistoryItem = {
-  id: string;
-  prompt: string;
-  image: string;
-};
+import Sidebar from "@/components/Sidebar";
+import { ART_STYLES } from "@/components/ArtStyleSheet";
 
 export default function Page() {
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [style, setStyle] = useState("Default");
+  const [strength, setStrength] = useState(70);
   const [loading, setLoading] = useState(false);
 
-  async function handleGenerate(compiledPrompt: string) {
+  async function handleGenerate(
+    prompt: string,
+    artStyle: string,
+    styleStrength: number
+  ) {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      const res = await fetch("/api/generate", {
+      await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: compiledPrompt }),
+        body: JSON.stringify({
+          prompt,
+          style: artStyle,
+          strength: styleStrength,
+        }),
       });
-
-      const data = await res.json();
-
-      setHistory((h) => [
-        {
-          id: crypto.randomUUID(),
-          prompt: compiledPrompt,
-          image: `data:image/png;base64,${data.image}`,
-        },
-        ...h,
-      ]);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main>
-      <div className="canvas">
-        {history.length === 0 && (
-          <div className="empty-state">Create your first image</div>
-        )}
+    <>
+      {/* Sidebar button */}
+      {!sidebarOpen && (
+        <button
+          className="sidebar-button"
+          onClick={() => setSidebarOpen(true)}
+        >
+          ☰
+        </button>
+      )}
 
-        {history.map((item) => (
-          <div key={item.id} className="message">
-            <img src={item.image} className="generated-image" />
-            <div className="caption">{item.prompt}</div>
-          </div>
-        ))}
-      </div>
+      {/* Sidebar */}
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)}>
+        <div className="sidebar-content">
+          <label>Art Style</label>
+          <select
+            className="art-style-select"
+            value={style}
+            onChange={(e) => setStyle(e.target.value)}
+          >
+            {ART_STYLES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
 
-      <PromptBar onGenerate={handleGenerate} loading={loading} />
-    </main>
+          <label>Style Strength: {strength}%</label>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={strength}
+            onChange={(e) => setStrength(Number(e.target.value))}
+          />
+        </div>
+      </Sidebar>
+
+      {/* Canvas */}
+      <main className="canvas">
+        <div className="empty-state">Create your first image</div>
+      </main>
+
+      {/* Prompt bar */}
+      <PromptBar
+        loading={loading}
+        onGenerate={(prompt) =>
+          handleGenerate(prompt, style, strength)
+        }
+      />
+    </>
   );
 }
