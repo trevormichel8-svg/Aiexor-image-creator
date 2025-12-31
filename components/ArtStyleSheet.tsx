@@ -1,5 +1,8 @@
 export const ART_STYLES = [
+  "Styles",
   "Default",
+  "Indigenous",
+  "Coloring Book",
   "Anime",
   "Cyberpunk",
   "Isometric",
@@ -9,6 +12,7 @@ export const ART_STYLES = [
   "Oil Painting",
   "Watercolor",
   "Pencil Sketch",
+  "Double Exposure"
   "Charcoal",
   "Ink Drawing",
   "Low Poly",
