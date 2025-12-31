@@ -12,41 +12,13 @@ body {
 }
 
 /* ===============================
-   CANVAS / HISTORY
+   CANVAS
 ================================ */
 
 .canvas {
   max-width: 720px;
   margin: 0 auto;
   padding: 24px 16px 140px;
-}
-
-.message {
-  margin-bottom: 28px;
-}
-
-.generated-image {
-  width: 100%;
-  border-radius: 16px;
-  box-shadow:
-    0 0 18px rgba(220, 38, 38, 0.6),
-    0 0 36px rgba(220, 38, 38, 0.4);
-}
-
-.caption {
-  margin-top: 8px;
-  font-size: 14px;
-  opacity: 0.75;
-}
-
-.caption .style {
-  opacity: 0.6;
-}
-
-.empty-state {
-  opacity: 0.4;
-  text-align: center;
-  margin-top: 120px;
 }
 
 /* ===============================
@@ -74,11 +46,10 @@ body {
   padding: 10px;
   border-radius: 999px;
   background: #0b0b0b;
-  border: 1px solid rgba(255, 60, 60, 0.7);
+  border: 1px solid rgba(255, 60, 60, 0.8);
   box-shadow:
-    0 0 14px rgba(220, 38, 38, 0.8),
-    0 0 28px rgba(220, 38, 38, 0.6),
-    inset 0 0 12px rgba(255, 255, 255, 0.08);
+    0 0 16px rgba(255, 0, 0, 0.8),
+    inset 0 0 10px rgba(255, 255, 255, 0.08);
 }
 
 .prompt-input {
@@ -91,83 +62,35 @@ body {
   padding: 10px 14px;
 }
 
-.prompt-input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.prompt-generate-btn,
-.prompt-style-btn {
+.prompt-generate-btn {
   width: 44px;
   height: 44px;
   border-radius: 999px;
   border: none;
-  cursor: pointer;
+  background: #ff2a2a;
   color: white;
-  font-size: 18px;
-  background: linear-gradient(145deg, #ff2a2a, #b80000);
-  box-shadow:
-    0 0 12px rgba(255, 50, 50, 0.9),
-    inset 0 0 8px rgba(255, 255, 255, 0.25);
-}
-
-.prompt-generate-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  box-shadow: 0 0 16px rgba(255, 0, 0, 0.9);
 }
 
 /* ===============================
    SIDEBAR
 ================================ */
 
-.sidebar-button {
-  position: fixed;
-  top: 14px;
-  left: 14px;
-  z-index: 60;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: none;
-  background: rgba(20, 20, 20, 0.85);
-  color: red;
-  font-size: 22px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow:
-    0 0 12px rgba(255, 0, 0, 0.6),
-    inset 0 0 6px rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 40;
-}
-
 .sidebar {
   position: fixed;
-  top: 0;
-  left: 0;
-  height: 100%;
+  inset: 0 auto 0 0;
   width: 280px;
   background: #050505;
   border-right: 1px solid rgba(255, 0, 0, 0.4);
-  transform: translateX(-100%);
-  transition: transform 0.25s ease;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar.open {
-  transform: translateX(0);
+  z-index: 60;
+  padding: 20px;
 }
 
 .sidebar-header {
-  padding: 16px;
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 28px;
+  text-align: center;
 }
 
 .sidebar-close {
@@ -182,82 +105,110 @@ body {
   color: red;
   font-size: 20px;
   cursor: pointer;
-  box-shadow: 0 0 12px rgba(255, 0, 0, 0.8);
+  box-shadow: 0 0 14px rgba(255, 0, 0, 0.9);
 }
 
 /* ===============================
-   SIDEBAR CONTENT
+   ART STYLE SECTION
 ================================ */
 
 .sidebar-content {
-  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px; /* BIGGER GAP BETWEEN MENU & SLIDER */
 }
 
-/* === ART STYLE SELECT === */
+/* LABELS — CENTERED */
+.sidebar-content label,
+.sidebar-content .strength-label {
+  text-align: center;
+  width: 100%;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+/* ART STYLE SELECT (PILL) */
 .sidebar-content select {
   width: 100%;
-  padding: 14px 18px;
+  padding: 16px;
+  text-align: center;
   font-size: 16px;
-  margin-bottom: 28px; /* ✅ MORE SPACE BELOW MENU */
   border-radius: 999px;
-  border: 1px solid rgba(255, 0, 0, 0.6);
+
   background: #0b0b0b;
   color: white;
+
+  border: 2px solid rgba(255, 0, 0, 0.85);
   box-shadow:
-    0 0 14px rgba(255, 0, 0, 0.6),
-    inset 0 0 8px rgba(255, 255, 255, 0.1);
+    0 0 16px rgba(255, 0, 0, 0.7),
+    inset 0 0 8px rgba(255, 255, 255, 0.08);
+
   appearance: none;
+  outline: none;
 }
 
-/* === SLIDER LABEL === */
-.sidebar-content .strength-label {
-  margin-bottom: 8px;
-  font-size: 14px;
-  opacity: 0.8;
+/* 🔒 FORCE RED BORDER ALWAYS */
+.sidebar-content select:focus,
+.sidebar-content select:active,
+.sidebar-content select:hover {
+  border-color: rgba(255, 0, 0, 1);
+  box-shadow:
+    0 0 18px rgba(255, 0, 0, 0.9),
+    inset 0 0 10px rgba(255, 255, 255, 0.1);
 }
 
-/* === SLIDER === */
+/* ===============================
+   SLIDER — FULL RED
+================================ */
+
 .sidebar-content input[type="range"] {
   width: 100%;
-  margin-top: 16px;   /* ✅ MORE SPACE ABOVE SLIDER */
-  margin-bottom: 10px;
   height: 6px;
   border-radius: 999px;
+
   background: linear-gradient(
     to right,
     #ff2a2a 0%,
     #ff2a2a var(--range-fill, 70%),
-    #333 var(--range-fill, 70%),
-    #333 100%
+    #222 var(--range-fill, 70%),
+    #222 100%
   );
-  box-shadow: 0 0 14px rgba(255, 0, 0, 0.6);
+
+  box-shadow: 0 0 14px rgba(255, 0, 0, 0.8);
+  appearance: none;
+  outline: none;
 }
 
+/* SLIDER THUMB */
 .sidebar-content input[type="range"]::-webkit-slider-thumb {
   appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #ff2a2a;
-  box-shadow: 0 0 16px rgba(255, 0, 0, 0.9);
+  box-shadow: 0 0 18px rgba(255, 0, 0, 1);
   cursor: pointer;
 }
 
+.sidebar-content input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ff2a2a;
+  box-shadow: 0 0 18px rgba(255, 0, 0, 1);
+}
+
 /* ===============================
-   INTERACTION RECOVERY
+   INTERACTION SAFETY
 ================================ */
 
 body,
 main,
 #__next,
-.canvas {
-  pointer-events: auto !important;
-}
-
+.canvas,
 button,
 input,
-select,
-textarea {
+select {
   pointer-events: auto !important;
-  touch-action: manipulation;
 }
