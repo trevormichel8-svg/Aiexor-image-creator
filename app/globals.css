@@ -212,3 +212,70 @@ input,
 select {
   pointer-events: auto !important;
 }
+
+/* ===============================
+   SIDEBAR BUTTON (LOCKED)
+================================ */
+.sidebar-button {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 9999;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+
+  background: #ff1a1a;
+  color: white;
+  font-size: 22px;
+  font-weight: bold;
+
+  border: none;
+  cursor: pointer;
+
+  box-shadow:
+    0 0 14px rgba(255, 0, 0, 0.9),
+    0 0 28px rgba(255, 0, 0, 0.6);
+}
+
+/* ===============================
+   ART STYLE PILL (LOCKED)
+================================ */
+.art-style-pill {
+  margin-top: 10px;
+  margin-bottom: 26px;
+
+  height: 52px;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  background: #000;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+
+  border: 2px solid #ff1a1a;
+
+  box-shadow:
+    0 0 14px rgba(255, 0, 0, 0.8),
+    inset 0 0 10px rgba(255, 255, 255, 0.08);
+}
+
+/* prevent browser focus / selection styling */
+.art-style-pill:focus,
+.art-style-pill:active {
+  outline: none;
+  border-color: #ff1a1a;
+}
+
+/* ===============================
+   SLIDER (LOCKED RED)
+================================ */
+input[type="range"] {
+  accent-color: #ff1a1a;
+}
