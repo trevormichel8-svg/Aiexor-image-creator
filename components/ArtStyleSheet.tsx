@@ -12,7 +12,7 @@ export const ART_STYLES = [
   "Oil Painting",
   "Watercolor",
   "Pencil Sketch",
-  "Double Exposure"
+  "Double Exposure",
   "Charcoal",
   "Ink Drawing",
   "Low Poly",
