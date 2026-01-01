@@ -16,7 +16,7 @@ interface SidebarProps {
 export default function Sidebar({
   open,
   onClose,
-  style,
+  artStyle,
   setStyle,
   strength,
   setStrength,
