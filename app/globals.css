@@ -279,3 +279,152 @@ select {
 input[type="range"] {
   accent-color: #ff1a1a;
 }
+
+/* =========================
+   SIDEBAR BUTTON (LOCKED)
+========================= */
+.sidebar-button {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 9999;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+
+  background: #ff1a1a;
+  color: black;
+  font-size: 20px;
+  font-weight: bold;
+
+  border: none;
+  cursor: pointer;
+
+  box-shadow:
+    0 0 14px rgba(255, 0, 0, 0.9),
+    0 0 30px rgba(255, 0, 0, 0.6);
+}
+
+/* =========================
+   SIDEBAR CORE
+========================= */
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 280px;
+  background: black;
+  z-index: 100;
+  padding: 20px;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 90;
+}
+
+.sidebar-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+
+  background: #ff1a1a;
+  color: black;
+  font-size: 18px;
+
+  border: none;
+  cursor: pointer;
+
+  box-shadow:
+    0 0 12px rgba(255,0,0,.9);
+}
+
+.sidebar-title {
+  margin-top: 40px;
+  margin-bottom: 28px;
+  text-align: center;
+  font-size: 28px;
+}
+
+/* =========================
+   ART STYLE PILL (LOCKED)
+========================= */
+.art-style-pill {
+  width: 100%;
+  padding: 14px;
+  border-radius: 999px;
+
+  background: black;
+  color: white;
+  font-size: 16px;
+  text-align: center;
+
+  border: 1px solid #ff1a1a;
+
+  box-shadow:
+    0 0 14px rgba(255,0,0,.8),
+    inset 0 0 10px rgba(255,255,255,.05);
+
+  cursor: pointer;
+}
+
+/* =========================
+   SLIDER (FIXED + RED)
+========================= */
+.slider-block {
+  width: 100%;
+}
+
+.slider-label {
+  text-align: center;
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+
+input[type="range"] {
+  width: 100%;
+  appearance: none;
+  height: 6px;
+  border-radius: 6px;
+  background: #ff1a1a;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ff1a1a;
+  box-shadow:
+    0 0 12px rgba(255,0,0,.9);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ff1a1a;
+  box-shadow:
+    0 0 12px rgba(255,0,0,.9);
+}
+
+/* =========================
+   EMPTY STATE TEXT
+========================= */
+.empty-state {
+  margin-top: 120px;
+  text-align: center;
+}
+
+.empty-state h2 {
+  font-size: 26px;
+  opacity: 0.85;
+}

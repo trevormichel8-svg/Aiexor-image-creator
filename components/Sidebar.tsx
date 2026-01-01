@@ -1,13 +1,12 @@
 "use client";
 
-import { ART_STYLES } from "./ArtStyleSheet";
-
-interface SidebarProps {
+type SidebarProps = {
   open: boolean;
   onClose: () => void;
-}
+  children: React.ReactNode;
+};
 
-export default function Sidebar({ open, onClose }: SidebarProps) {
+export default function Sidebar({ open, onClose, children }: SidebarProps) {
   if (!open) return null;
 
   return (
@@ -15,25 +14,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       <div className="sidebar-overlay" onClick={onClose} />
 
       <aside className="sidebar open">
-        <div className="sidebar-header">
-          <h2>Settings</h2>
-          <button className="sidebar-close" onClick={onClose}>
-            ✕
-          </button>
-        </div>
+        <button
+          className="sidebar-close"
+          onClick={onClose}
+          aria-label="Close settings"
+        >
+          ✕
+        </button>
 
         <div className="sidebar-content">
-          <label className="sidebar-label">Art Style</label>
-
-          {/* LOCKED PILL */}
-          <div className="art-style-pill">
-            Art Styles
-          </div>
-
-          <div className="slider-block">
-            <div className="slider-label">Style Strength: 70%</div>
-            <input type="range" min="0" max="100" defaultValue={70} />
-          </div>
+          {children}
         </div>
       </aside>
     </>
