@@ -13,17 +13,6 @@ interface SidebarProps {
   setStrength: Dispatch<SetStateAction<number>>
 }
 
-import { useState } from "react"; // ✅ REQUIRED FIX
-
-type SidebarProps = {
-  open: boolean;
-  onClose: () => void;
-  style: string;
-  setStyle: (s: string) => void;
-  strength: number;
-  setStrength: (n: number) => void;
-};
-
 export default function Sidebar({
   open,
   onClose,
