@@ -1,36 +1,23 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useImageSettings } from "@/lib/useImageSettings"
 
-type PromptBarProps = {
-  loading: boolean;
-  onGenerate: (prompt: string) => void;
-};
-
-export default function PromptBar({ loading, onGenerate }: PromptBarProps) {
-  const [prompt, setPrompt] = useState("");
+export default function PromptBar({ onGenerate }: { onGenerate: () => void }) {
+  const { prompt, setPrompt } = useImageSettings()
 
   return (
     <div className="prompt-bar-wrapper">
       <div className="prompt-bar-glow">
         <input
           className="prompt-input"
-          placeholder="Describe your image..."
+          placeholder="Describe your image…"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
         />
-
-        <button
-          className="prompt-generate-btn"
-          disabled={loading || !prompt}
-          onClick={() => {
-            onGenerate(prompt);
-            setPrompt("");
-          }}
-        >
+        <button className="prompt-generate-btn" onClick={onGenerate}>
           →
         </button>
       </div>
     </div>
-  );
+  )
 }

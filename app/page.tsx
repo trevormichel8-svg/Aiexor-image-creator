@@ -1,41 +1,30 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Sidebar from "../components/Sidebar";
-import PromptBar from "../components/PromptBar";
+import { useState } from "react"
+import Sidebar from "@/components/Sidebar"
+import PromptBar from "@/components/PromptBar"
+import ImageCanvas from "@/components/ImageCanvas"
 
 export default function Page() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [artStyle, setArtStyle] = useState("Default");
-  const [strength, setStrength] = useState(70);
-  const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <>
-      {/* SIDEBAR BUTTON */}
+    <main className="canvas">
       <button
-        className="sidebar-toggle"
+        className="sidebar-button"
         onClick={() => setSidebarOpen(true)}
       >
         ☰
       </button>
 
-      <main className="canvas">
-        <h1 className="hero-text">
-          Create your first image
-        </h1>
-      </main>
-
-      <PromptBar loading={loading} onGenerate={() => {}} />
-
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        artStyle={artStyle}
-        setArtStyle={setArtStyle}
-        strength={strength}
-        setStrength={setStrength}
       />
-    </>
-  );
+
+      <ImageCanvas src="" />
+
+      <PromptBar onGenerate={() => {}} />
+    </main>
+  )
 }
