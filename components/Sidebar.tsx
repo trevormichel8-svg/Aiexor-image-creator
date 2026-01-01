@@ -17,7 +17,7 @@ export default function Sidebar({
   open,
   onClose,
   artStyle,
-  setStyle,
+  setArtStyle,
   strength,
   setStrength,
 }: SidebarProps) {
