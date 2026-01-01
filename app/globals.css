@@ -1,9 +1,36 @@
+/* ===============================
+   DESIGN TOKENS (SINGLE SOURCE)
+================================ */
+
+:root {
+  /* Core */
+  --bg: #000000;
+  --surface: #0b0b0b;
+
+  /* Brand / Accent */
+  --accent: #ff1a1a;
+  --accent-strong: #ff2a2a;
+
+  /* Text */
+  --text: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.85);
+
+  /* Borders / Glow */
+  --border-accent: rgba(255, 0, 0, 0.85);
+  --glow-soft: rgba(255, 0, 0, 0.6);
+  --glow-strong: rgba(255, 0, 0, 0.9);
+}
+
+/* ===============================
+   BASE RESET
+================================ */
+
 html,
 body {
   margin: 0;
   padding: 0;
-  background: black;
-  color: white;
+  background: var(--bg);
+  color: var(--text);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -45,10 +72,12 @@ body {
   max-width: 720px;
   padding: 10px;
   border-radius: 999px;
-  background: #0b0b0b;
-  border: 1px solid rgba(255, 60, 60, 0.8);
+
+  background: var(--surface);
+  border: 1px solid var(--border-accent);
+
   box-shadow:
-    0 0 16px rgba(255, 0, 0, 0.8),
+    0 0 16px var(--glow-strong),
     inset 0 0 10px rgba(255, 255, 255, 0.08);
 }
 
@@ -57,7 +86,7 @@ body {
   background: transparent;
   border: none;
   outline: none;
-  color: white;
+  color: var(--text);
   font-size: 16px;
   padding: 10px 14px;
 }
@@ -67,253 +96,23 @@ body {
   height: 44px;
   border-radius: 999px;
   border: none;
-  background: #ff2a2a;
-  color: white;
-  box-shadow: 0 0 16px rgba(255, 0, 0, 0.9);
+
+  background: var(--accent-strong);
+  color: var(--text);
+
+  box-shadow: 0 0 16px var(--glow-strong);
 }
 
 /* ===============================
-   SIDEBAR
-================================ */
-
-.sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: 280px;
-  background: #050505;
-  border-right: 1px solid rgba(255, 0, 0, 0.4);
-  z-index: 60;
-  padding: 20px;
-}
-
-.sidebar-header {
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 28px;
-  text-align: center;
-}
-
-.sidebar-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: #111;
-  color: red;
-  font-size: 20px;
-  cursor: pointer;
-  box-shadow: 0 0 14px rgba(255, 0, 0, 0.9);
-}
-
-/* ===============================
-   ART STYLE SECTION
-================================ */
-
-.sidebar-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 28px; /* BIGGER GAP BETWEEN MENU & SLIDER */
-}
-
-/* LABELS — CENTERED */
-.sidebar-content label,
-.sidebar-content .strength-label {
-  text-align: center;
-  width: 100%;
-  font-size: 15px;
-  opacity: 0.85;
-}
-
-/* ART STYLE SELECT (PILL) */
-.sidebar-content select {
-  width: 100%;
-  padding: 16px;
-  text-align: center;
-  font-size: 16px;
-  border-radius: 999px;
-
-  background: #0b0b0b;
-  color: white;
-
-  border: 2px solid rgba(255, 0, 0, 0.85);
-  box-shadow:
-    0 0 16px rgba(255, 0, 0, 0.7),
-    inset 0 0 8px rgba(255, 255, 255, 0.08);
-
-  appearance: none;
-  outline: none;
-}
-
-/* 🔒 FORCE RED BORDER ALWAYS */
-.sidebar-content select:focus,
-.sidebar-content select:active,
-.sidebar-content select:hover {
-  border-color: rgba(255, 0, 0, 1);
-  box-shadow:
-    0 0 18px rgba(255, 0, 0, 0.9),
-    inset 0 0 10px rgba(255, 255, 255, 0.1);
-}
-
-/* ===============================
-   SLIDER — FULL RED
-================================ */
-
-.sidebar-content input[type="range"] {
-  width: 100%;
-  height: 6px;
-  border-radius: 999px;
-
-  background: linear-gradient(
-    to right,
-    #ff2a2a 0%,
-    #ff2a2a var(--range-fill, 70%),
-    #222 var(--range-fill, 70%),
-    #222 100%
-  );
-
-  box-shadow: 0 0 14px rgba(255, 0, 0, 0.8);
-  appearance: none;
-  outline: none;
-}
-
-/* SLIDER THUMB */
-.sidebar-content input[type="range"]::-webkit-slider-thumb {
-  appearance: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #ff2a2a;
-  box-shadow: 0 0 18px rgba(255, 0, 0, 1);
-  cursor: pointer;
-}
-
-.sidebar-content input[type="range"]::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #ff2a2a;
-  box-shadow: 0 0 18px rgba(255, 0, 0, 1);
-}
-
-/* ===============================
-   INTERACTION SAFETY
-================================ */
-
-body,
-main,
-#__next,
-.canvas,
-button,
-input,
-select {
-  pointer-events: auto !important;
-}
-
-/* ===============================
-   SIDEBAR BUTTON (LOCKED)
-================================ */
-.sidebar-button {
-  position: fixed;
-  top: 14px;
-  left: 14px;
-  z-index: 9999;
-
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-
-  background: #ff1a1a;
-  color: white;
-  font-size: 22px;
-  font-weight: bold;
-
-  border: none;
-  cursor: pointer;
-
-  box-shadow:
-    0 0 14px rgba(255, 0, 0, 0.9),
-    0 0 28px rgba(255, 0, 0, 0.6);
-}
-
-/* ===============================
-   ART STYLE PILL (LOCKED)
-================================ */
-.art-style-pill {
-  margin-top: 10px;
-  margin-bottom: 26px;
-
-  height: 52px;
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 999px;
-  background: #000;
-  color: white;
-  font-size: 16px;
-  font-weight: 500;
-
-  border: 2px solid #ff1a1a;
-
-  box-shadow:
-    0 0 14px rgba(255, 0, 0, 0.8),
-    inset 0 0 10px rgba(255, 255, 255, 0.08);
-}
-
-/* prevent browser focus / selection styling */
-.art-style-pill:focus,
-.art-style-pill:active {
-  outline: none;
-  border-color: #ff1a1a;
-}
-
-/* ===============================
-   SLIDER (LOCKED RED)
-================================ */
-input[type="range"] {
-  accent-color: #ff1a1a;
-}
-
-/* =========================
-   SIDEBAR BUTTON (LOCKED)
-========================= */
-.sidebar-button {
-  position: fixed;
-  top: 14px;
-  left: 14px;
-  z-index: 9999;
-
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-
-  background: #ff1a1a;
-  color: black;
-  font-size: 20px;
-  font-weight: bold;
-
-  border: none;
-  cursor: pointer;
-
-  box-shadow:
-    0 0 14px rgba(255, 0, 0, 0.9),
-    0 0 30px rgba(255, 0, 0, 0.6);
-}
-
-/* =========================
    SIDEBAR CORE
-========================= */
+================================ */
+
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
   width: 280px;
-  background: black;
+  background: var(--bg);
+  border-right: 1px solid var(--border-accent);
   z-index: 100;
   padding: 20px;
 }
@@ -321,28 +120,8 @@ input[type="range"] {
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 90;
-}
-
-.sidebar-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-
-  background: #ff1a1a;
-  color: black;
-  font-size: 18px;
-
-  border: none;
-  cursor: pointer;
-
-  box-shadow:
-    0 0 12px rgba(255,0,0,.9);
 }
 
 .sidebar-title {
@@ -352,73 +131,135 @@ input[type="range"] {
   font-size: 28px;
 }
 
-/* =========================
-   ART STYLE PILL (LOCKED)
-========================= */
-.art-style-pill {
-  width: 100%;
-  padding: 14px;
-  border-radius: 999px;
+/* ===============================
+   SIDEBAR BUTTONS
+================================ */
 
-  background: black;
-  color: white;
-  font-size: 16px;
-  text-align: center;
-
-  border: 1px solid #ff1a1a;
-
-  box-shadow:
-    0 0 14px rgba(255,0,0,.8),
-    inset 0 0 10px rgba(255,255,255,.05);
-
+.sidebar-button,
+.sidebar-close {
+  border: none;
   cursor: pointer;
+  background: var(--accent);
+  color: var(--bg);
+
+  box-shadow: 0 0 14px var(--glow-strong);
 }
 
-/* =========================
-   SLIDER (FIXED + RED)
-========================= */
-.slider-block {
-  width: 100%;
+.sidebar-button {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 9999;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
 }
 
+.sidebar-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+}
+
+/* ===============================
+   SIDEBAR CONTENT
+================================ */
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.sidebar-content label,
 .slider-label {
   text-align: center;
-  margin-bottom: 10px;
-  opacity: 0.8;
+  width: 100%;
+  font-size: 15px;
+  color: var(--text-muted);
 }
 
-input[type="range"] {
+/* ===============================
+   ART STYLE PILL
+================================ */
+
+.art-style-pill {
   width: 100%;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+
+  border: 2px solid var(--accent);
+  box-shadow:
+    0 0 14px var(--glow-soft),
+    inset 0 0 10px rgba(255, 255, 255, 0.08);
+}
+
+/* ===============================
+   SELECT
+================================ */
+
+.sidebar-content select {
+  width: 100%;
+  padding: 16px;
+  text-align: center;
+  font-size: 16px;
+
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+
+  border: 2px solid var(--border-accent);
+  box-shadow: 0 0 16px var(--glow-soft);
+
   appearance: none;
-  height: 6px;
-  border-radius: 6px;
-  background: #ff1a1a;
   outline: none;
 }
 
-input[type="range"]::-webkit-slider-thumb {
+/* ===============================
+   SLIDER
+================================ */
+
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+
+  background: var(--accent);
+  outline: none;
   appearance: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #ff1a1a;
-  box-shadow:
-    0 0 12px rgba(255,0,0,.9);
-  cursor: pointer;
 }
 
+input[type="range"]::-webkit-slider-thumb,
 input[type="range"]::-moz-range-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #ff1a1a;
-  box-shadow:
-    0 0 12px rgba(255,0,0,.9);
+  background: var(--accent);
+
+  box-shadow: 0 0 12px var(--glow-strong);
+  cursor: pointer;
 }
 
-/* =========================
-   EMPTY STATE TEXT
-========================= */
+/* ===============================
+   EMPTY STATE
+================================ */
+
 .empty-state {
   margin-top: 120px;
   text-align: center;
@@ -426,5 +267,5 @@ input[type="range"]::-moz-range-thumb {
 
 .empty-state h2 {
   font-size: 26px;
-  opacity: 0.85;
+  color: var(--text-muted);
 }
