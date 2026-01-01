@@ -29,12 +29,23 @@ export default function Page() {
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
+      {/* Sidebar Button (RESTORED & LOCKED) */}
+      {!sidebarOpen && (
+        <button
+          className="sidebar-button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open settings"
+        >
+          ☰
+        </button>
+      )}
+
       {/* Main content */}
       <main className="canvas">
         <h1>Create your first image</h1>
       </main>
 
-      {/* Prompt Bar — REQUIRED PROPS */}
+      {/* Prompt Bar */}
       <PromptBar loading={loading} onGenerate={handleGenerate} />
     </>
   );
