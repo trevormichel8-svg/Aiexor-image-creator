@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, SetStateAction } from "react"
+import { Dispatch, SetStateAction, useState } from "react"
 
 interface SidebarProps {
   open: boolean
