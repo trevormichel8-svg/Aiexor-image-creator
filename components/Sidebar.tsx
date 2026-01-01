@@ -1,21 +1,21 @@
 "use client";
 
-import ArtStyleSheet from "./ArtStyleSheet";
+import { useState } from "react"; // ✅ REQUIRED FIX
 
-interface SidebarProps {
+type SidebarProps = {
   open: boolean;
   onClose: () => void;
-  artStyle: string;
-  setArtStyle: (v: string) => void;
+  style: string;
+  setStyle: (s: string) => void;
   strength: number;
-  setStrength: (v: number) => void;
-}
+  setStrength: (n: number) => void;
+};
 
 export default function Sidebar({
   open,
   onClose,
-  artStyle,
-  setArtStyle,
+  style,
+  setStyle,
   strength,
   setStrength,
 }: SidebarProps) {
@@ -24,43 +24,43 @@ export default function Sidebar({
   if (!open) return null;
 
   return (
-    <aside className="sidebar">
-      <button className="sidebar-close" onClick={onClose}>
-        ✕
-      </button>
+    <>
+      <div className="sidebar-overlay" onClick={onClose} />
 
-      <h2 className="sidebar-title">Settings</h2>
-
-      {/* ART STYLE BUTTON */}
-      <button
-        className="art-style-pill"
-        onClick={() => setShowStyles(true)}
-      >
-        Art Styles
-      </button>
-
-      {/* SLIDER */}
-      <div className="slider-group">
-        <div className="slider-label">
-          Style Strength: {strength}%
+      <aside className="sidebar open">
+        <div className="sidebar-header">
+          <span>Settings</span>
+          <button onClick={onClose}>✕</button>
         </div>
 
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={strength}
-          onChange={(e) => setStrength(Number(e.target.value))}
-          className="red-slider"
-        />
-      </div>
+        <div className="sidebar-content">
+          {/* Art Style Button */}
+          <button
+            className="art-style-pill"
+            onClick={() => setShowStyles((v) => !v)}
+          >
+            Art Styles
+          </button>
 
-      <ArtStyleSheet
-        open={showStyles}
-        onClose={() => setShowStyles(false)}
-        value={artStyle}
-        onChange={setArtStyle}
-      />
-    </aside>
+          {showStyles && (
+            <div className="art-style-list">
+              {/* styles rendered elsewhere */}
+            </div>
+          )}
+
+          {/* Strength Slider */}
+          <div className="slider-group">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={strength}
+              onChange={(e) => setStrength(Number(e.target.value))}
+            />
+            <div className="slider-label">Style Strength</div>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }
