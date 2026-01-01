@@ -1,5 +1,18 @@
 "use client";
 
+import { Dispatch, SetStateAction } from "react"
+
+interface SidebarProps {
+  open: boolean
+  onClose: () => void
+
+  artStyle: string
+  setArtStyle: Dispatch<SetStateAction<string>>
+
+  strength: number
+  setStrength: Dispatch<SetStateAction<number>>
+}
+
 import { useState } from "react"; // ✅ REQUIRED FIX
 
 type SidebarProps = {
