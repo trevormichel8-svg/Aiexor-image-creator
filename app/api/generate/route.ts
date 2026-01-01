@@ -1,28 +1,29 @@
-import OpenAI from "openai";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server"
+import { imageRequestSchema } from "@/lib/validation"
+import { generateImage } from "@/lib/generateImage"
+import { rateLimit } from "@/lib/rateLimit"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown"
 
-export async function POST(req: Request) {
+  if (!rateLimit(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+  }
+
+  const body = await req.json()
+  const parsed = imageRequestSchema.safeParse(body)
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 })
+  }
+
   try {
-    const { prompt } = await req.json();
+    const imageUrl = await generateImage(
+      `${parsed.data.prompt}, ${parsed.data.style}`
+    )
 
-    const result = await openai.images.generate({
-      model: "gpt-image-1",
-      prompt,
-    });
-
-    if (!result.data?.[0]?.b64_json) {
-      throw new Error("No image returned");
-    }
-
-    return NextResponse.json({
-      image: result.data[0].b64_json,
-    });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: "Generation failed" }, { status: 500 });
+    return NextResponse.json({ imageUrl })
+  } catch {
+    return NextResponse.json({ error: "Generation failed" }, { status: 500 })
   }
 }
