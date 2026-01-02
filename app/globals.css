@@ -103,6 +103,12 @@ body {
   box-shadow: 0 0 16px var(--glow-strong);
 }
 
+.generate-arrow {
+  font-size: 26px;
+  font-weight: 900;
+  color: black;
+}
+
 /* ===============================
    SIDEBAR CORE
 ================================ */
@@ -240,20 +246,33 @@ input[type="range"] {
   height: 6px;
   border-radius: 999px;
 
-  background: var(--accent);
-  outline: none;
+  background: black;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 12px var(--glow-soft);
+
   appearance: none;
+  outline: none;
 }
 
-input[type="range"]::-webkit-slider-thumb,
+/* THUMB */
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--glow-strong);
+  cursor: pointer;
+}
+
 input[type="range"]::-moz-range-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--accent);
 
-  box-shadow: 0 0 12px var(--glow-strong);
-  cursor: pointer;
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--glow-strong);
 }
 
 /* ===============================

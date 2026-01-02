@@ -15,7 +15,7 @@ export default function PromptBar({ onGenerate }: { onGenerate: () => void }) {
           onChange={(e) => setPrompt(e.target.value)}
         />
         <button className="prompt-generate-btn" onClick={onGenerate}>
-          →
+          <span className="generate-arrow">→</span>
         </button>
       </div>
     </div>
