@@ -10,24 +10,23 @@ export default function Page() {
 
   return (
     <main className="canvas">
-    <div className="empty-state">
-       <h2>Create Your First Image</h2>
-    </div>      
-
-      <button
-        {!sidebarOpen && (
-  <button
-    className="sidebar-button"
-    onClick={() => setSidebarOpen(true)}
-  >
-    ☰
-  </button>
-)}
+      {!sidebarOpen && (
+        <button
+          className="sidebar-button"
+          onClick={() => setSidebarOpen(true)}
+        >
+          ☰
+        </button>
+      )}
 
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
+
+      <div className="empty-state">
+        <h2>Create Your First Image</h2>
+      </div>
 
       <ImageCanvas src="" />
 
