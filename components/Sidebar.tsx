@@ -1,7 +1,7 @@
 "use client"
 
 import { useImageSettings } from "@/lib/useImageSettings"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useRef } from "react"
 
 interface SidebarProps {
   open: boolean
@@ -58,6 +58,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     useImageSettings()
 
   const [query, setQuery] = useState("")
+  const startX = useRef<number | null>(null)
 
   const filteredStyles = useMemo(() => {
     if (!query) return ART_STYLES
@@ -66,13 +67,37 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     )
   }, [query])
 
-  if (!open) return null
+  function onTouchStart(e: React.TouchEvent) {
+    startX.current = e.touches[0].clientX
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    if (startX.current === null) return
+
+    const endX = e.changedTouches[0].clientX
+    const deltaX = endX - startX.current
+
+    if (deltaX > 80) {
+      onClose()
+    }
+
+    startX.current = null
+  }
 
   return (
     <>
-      <div className="sidebar-overlay" onClick={onClose} />
+      <div
+        className={`sidebar-overlay ${open ? "open" : ""}`}
+        onClick={onClose}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      />
 
-      <aside className="sidebar">
+      <aside
+        className={`sidebar ${open ? "open" : ""}`}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <button className="sidebar-close" onClick={onClose}>
           ×
         </button>

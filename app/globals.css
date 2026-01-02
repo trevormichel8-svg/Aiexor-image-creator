@@ -288,3 +288,28 @@ input[type="range"]::-moz-range-thumb {
   font-size: 26px;
   color: var(--text-muted);
 }
+
+/* =========================
+   SIDEBAR ANIMATION
+========================= */
+
+.sidebar {
+  transform: translateX(-100%);
+  transition: transform 0.28s ease-out;
+  will-change: transform;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-overlay {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease-out;
+}
+
+.sidebar-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
