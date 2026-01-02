@@ -1,7 +1,7 @@
 "use client"
 
 import { useImageSettings } from "@/lib/useImageSettings"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 interface SidebarProps {
   open: boolean
@@ -10,143 +10,61 @@ interface SidebarProps {
 
 const ART_STYLES = [
   // Realism / Photography
-  "Photorealistic",
-  "Ultra Realistic",
-  "Double Exposure",
-  "Cinematic",
-  "Hyperrealism",
-  "HDR Photography",
-  "Studio Lighting",
-  "Portrait Photography",
-  "Macro Photography",
-  "Long Exposure",
-  "Film Grain",
-  "35mm Film",
-  "DSLR Photo",
-  "Analog Film",
+  "Photorealistic", "Ultra Realistic", "Cinematic", "Hyperrealism",
+  "HDR Photography", "Studio Lighting", "Portrait Photography",
+  "Macro Photography", "Long Exposure", "Film Grain", "35mm Film",
+  "Analog Film", "Double Exposure",
 
   // Illustration
-  "Digital Illustration",
-  "Concept Art",
-  "Character Design",
-  "Environment Concept",
-  "Matte Painting",
-  "Children's Book Illustration",
-  "Editorial Illustration",
-  "Ink Illustration",
-  "Line Art",
-  "Flat Illustration",
-  "Coloring Book",
-  
+  "Digital Illustration", "Concept Art", "Character Design",
+  "Environment Concept", "Matte Painting", "Ink Illustration",
+  "Line Art", "Flat Illustration", "Coloring Book",
+
   // Anime / Manga
-  "Anime",
-  "Manga",
-  "Chibi",
-  "Studio Ghibli Style",
-  "Shonen Anime",
-  "Shojo Anime",
-  "Mecha Anime",
-  "Cyberpunk Anime",
-  "Anime Portrait",
-  "Anime Background",
+  "Anime", "Manga", "Chibi", "Studio Ghibli Style", "Cyberpunk Anime",
+  "Mecha Anime", "Anime Portrait",
 
   // Painting
-  "Oil Painting",
-  "Watercolor",
-  "Acrylic Painting",
-  "Gouache",
-  "Impasto",
-  "Fresco",
-  "Encaustic",
-  "Digital Painting",
-  "Plein Air Painting",
+  "Oil Painting", "Watercolor", "Acrylic Painting", "Gouache",
+  "Impasto", "Digital Painting",
 
   // Art Movements
-  "Impressionism",
-  "Post-Impressionism",
-  "Expressionism",
-  "Abstract Expressionism",
-  "Surrealism",
-  "Cubism",
-  "Fauvism",
-  "Dadaism",
-  "Pop Art",
-  "Minimalism",
-  "Brutalism",
-  "Indigenous",
-  "Constructivism",
+  "Indigenous", "Impressionism", "Expressionism", "Surrealism", "Cubism",
+  "Pop Art", "Minimalism", "Abstract Expressionism",
 
   // Sci-Fi / Fantasy
-  "Cyberpunk",
-  "Steampunk",
-  "Dieselpunk",
-  "Biopunk",
-  "Solarpunk",
-  "High Fantasy",
-  "Dark Fantasy",
-  "Epic Fantasy",
-  "Sci-Fi Concept Art",
-  "Space Opera",
-  "Alien World",
-  "Futuristic City",
+  "Cyberpunk", "Steampunk", "Solarpunk", "Dark Fantasy",
+  "Epic Fantasy", "Sci-Fi Concept Art", "Alien World",
 
   // 3D / CGI
-  "3D Render",
-  "Octane Render",
-  "Unreal Engine",
-  "Blender Render",
-  "Cinema 4D",
-  "Isometric 3D",
-  "Low Poly",
-  "Voxel Art",
+  "3D Render", "Blender Render", "Unreal Engine",
+  "Low Poly", "Voxel Art",
 
   // Retro / Stylized
-  "Pixel Art",
-  "8-bit",
-  "16-bit",
-  "Retro Arcade",
-  "Vaporwave",
-  "Synthwave",
-  "Glitch Art",
-  "Y2K",
-  "Neon Noir",
+  "Pixel Art", "8-bit", "Vaporwave", "Synthwave",
+  "Glitch Art", "Neon Noir", "Mosaic",
 
-  // Design / Graphic
-  "Graphic Design",
-  "Poster Design",
-  "Album Cover",
-  "Book Cover",
-  "Logo Design",
-  "Typography Art",
-  "Vector Art",
-  "Infographic",
+  // Design
+  "Graphic Design", "Poster Design", "Album Cover",
+  "Book Cover", "Vector Art",
 
-  // Horror / Dark
-  "Horror",
-  "Cosmic Horror",
-  "Gothic",
-  "Dark Surrealism",
-  "Lovecraftian",
-  "Creepy Illustration",
-
-  // Experimental
-  "AI Abstract",
-  "Procedural Art",
-  "Generative Art",
-  "Fractal Art",
-  "Data-moshing",
-  "Mixed Media",
+  // Horror / Experimental
+  "Horror", "Cosmic Horror", "Lovecraftian",
+  "Generative Art", "Fractal Art", "Mixed Media",
 ]
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
-  const {
-    artStyle,
-    setArtStyle,
-    strength,
-    setStrength,
-  } = useImageSettings()
+  const { artStyle, setArtStyle, strength, setStrength } =
+    useImageSettings()
 
-  const styles = useMemo(() => ART_STYLES, [])
+  const [query, setQuery] = useState("")
+
+  const filteredStyles = useMemo(() => {
+    if (!query) return ART_STYLES
+    return ART_STYLES.filter((style) =>
+      style.toLowerCase().includes(query.toLowerCase())
+    )
+  }, [query])
 
   if (!open) return null
 
@@ -162,13 +80,21 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         <h2 className="sidebar-title">Art Settings</h2>
 
         <div className="sidebar-content">
-          <label>Art Style</label>
+          <label>Search Art Styles</label>
+
+          <input
+            className="prompt-input"
+            placeholder="Type to filter styles…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
 
           <select
+            size={8}
             value={artStyle}
             onChange={(e) => setArtStyle(e.target.value)}
           >
-            {styles.map((style) => (
+            {filteredStyles.map((style) => (
               <option key={style} value={style}>
                 {style}
               </option>
