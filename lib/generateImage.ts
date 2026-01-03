@@ -2,7 +2,7 @@ import OpenAI from "openai"
 import { requireOpenAIKey } from "./env"
 
 const client = new OpenAI({
-  apiKey: requireOpenAIKey(),
+  apiKey: requireOpenAIKey("OPENAI_API_KEY"),
 })
 
 export async function generateImage(prompt: string) {

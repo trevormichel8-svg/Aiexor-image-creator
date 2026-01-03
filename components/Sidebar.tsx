@@ -56,7 +56,7 @@ export default function Sidebar({
 
   return (
     <>
-      <div
+      <div><div className='credits'>Credits: {credits}</div>
         className={`sidebar-overlay ${open ? "open" : ""}`}
         onClick={onClose}
         onTouchStart={onTouchStart}
@@ -74,7 +74,7 @@ export default function Sidebar({
 
         <h2 className="sidebar-title">Art Settings</h2>
 
-        <div className="sidebar-content">
+        <div><div className='credits'>Credits: {credits}</div> className="sidebar-content">
           <label>Search Art Styles</label>
 
           <input
@@ -96,8 +96,8 @@ export default function Sidebar({
             ))}
           </select>
 
-          <div className="slider-block">
-            <div className="slider-label">
+          <div><div className='credits'>Credits: {credits}</div> className="slider-block">
+            <div><div className='credits'>Credits: {credits}</div> className="slider-label">
               Strength: {strength}
             </div>
 
