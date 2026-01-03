@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   // Rate limit
   if (!rateLimit(ip)) {
     return NextResponse.json(
-      { error: "Too many requests", credits: getCredits() },
+      { error: "Too many requests" },
       { status: 429 }
     )
   }
