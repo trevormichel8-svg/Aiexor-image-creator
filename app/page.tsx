@@ -55,26 +55,31 @@ export default function Page() {
 
   return (
     <main className="canvas">
+      {/* Mobile Sidebar Toggle */}
       {!sidebarOpen && (
         <button
-  className="sidebar-button"
-  onClick={() => setSidebarOpen(true)}
-  style={{
-    background: "var(--accent)",
-    color: "#022c28",
-    borderRadius: "50%",
-    width: 44,
-    height: 44,
-    border: "none",
-    boxShadow: "0 0 16px rgba(20,184,166,0.8)",
-    cursor: "pointer",
-    fontSize: 20,
-  }}
->
-  ☰
-</button>
+          onClick={() => setSidebarOpen(true)}
+          style={{
+            position: "fixed",
+            top: 14,
+            left: 14,
+            zIndex: 60,
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            background: "var(--accent)",
+            color: "#022c28",
+            border: "none",
+            fontSize: 20,
+            cursor: "pointer",
+            boxShadow: "0 0 16px rgba(20,184,166,0.9)",
+          }}
+        >
+          ☰
+        </button>
       )}
 
+      {/* Sidebar */}
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -85,28 +90,56 @@ export default function Page() {
         credits={credits}
       />
 
+      {/* Image Area */}
       {imageSrc ? (
         <div
           className="image-wrapper"
           onClick={() => setLightboxOpen(true)}
-          style={{ cursor: "zoom-in" }}
+          style={{
+            marginTop: 32,
+            cursor: "zoom-in",
+          }}
         >
           <ImageCanvas src={imageSrc} />
         </div>
       ) : (
-        <div className="empty-state">
-          <h2>Create Your First Image</h2>
+        <div
+          className="empty-state"
+          style={{
+            marginTop: 120,
+            textAlign: "center",
+            color: "var(--text-muted)",
+          }}
+        >
+          <h2 style={{ marginBottom: 8 }}>Create your first image</h2>
+          <p style={{ fontSize: 14 }}>
+            Describe what you want to generate below
+          </p>
         </div>
       )}
 
-      {loading && <div className="p-6 text-center">Generating image…</div>}
+      {/* Loading State */}
+      {loading && (
+        <div
+          style={{
+            marginTop: 24,
+            textAlign: "center",
+            color: "var(--accent)",
+            textShadow: "0 0 10px rgba(20,184,166,0.6)",
+          }}
+        >
+          Generating image…
+        </div>
+      )}
 
+      {/* Prompt Bar */}
       <PromptBar
         onGenerate={handleGenerate}
         prompt={prompt}
         setPrompt={setPrompt}
       />
 
+      {/* Lightbox */}
       {lightboxOpen && imageSrc && (
         <ImageLightbox
           src={imageSrc}

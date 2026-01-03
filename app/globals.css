@@ -55,6 +55,24 @@ button.primary {
   cursor: pointer;
 }
 
+/* =========================
+   MOBILE TUNING
+   ========================= */
+
+@media (max-width: 640px) {
+  main.canvas {
+    padding: 16px 12px 160px; /* extra bottom for prompt bar */
+  }
+
+  h1, h2 {
+    font-size: 18px;
+  }
+
+  label {
+    font-size: 12px;
+  }
+}
+
 button.primary:disabled {
   opacity: 0.5;
 }

@@ -23,43 +23,62 @@ export default function Sidebar({
 }: SidebarProps) {
   return (
     <>
+      {/* Overlay */}
       {open && (
         <div
           onClick={onClose}
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.6)",
+            background: "rgba(0,0,0,0.65)",
+            zIndex: 40,
           }}
         />
       )}
 
+      {/* Sidebar */}
       <aside
         style={{
           position: "fixed",
           top: 0,
-          left: open ? 0 : -340,
-          width: 320,
+          left: open ? 0 : "-100%",
+          width: "85vw",
+          maxWidth: 340,
           height: "100%",
           background: "var(--bg-panel)",
           padding: 24,
           transition: "left 0.25s ease",
+          zIndex: 50,
           overflowY: "auto",
         }}
       >
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h2>Art Settings</h2>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 16,
+          }}
+        >
+          <h2 style={{ margin: 0 }}>Art Settings</h2>
 
+          {/* Close Button */}
           <button
             onClick={onClose}
+            aria-label="Close sidebar"
             style={{
-              background: "transparent",
+              background: "var(--accent)",
+              color: "#022c28",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
               border: "none",
-              color: "var(--accent)",
               fontSize: 22,
+              lineHeight: "36px",
+              textAlign: "center",
               cursor: "pointer",
-              textShadow: "0 0 10px var(--accent)",
+              boxShadow: "0 0 16px rgba(20,184,166,0.9)",
             }}
           >
             ×
@@ -69,21 +88,29 @@ export default function Sidebar({
         {/* Credits */}
         <div
           style={{
-            marginTop: 12,
-            marginBottom: 24,
-            background: "rgba(20,184,166,0.15)",
+            background: "rgba(20,184,166,0.18)",
             color: "var(--accent)",
             padding: "8px 14px",
             borderRadius: 999,
+            fontSize: 14,
+            fontWeight: 600,
             width: "fit-content",
-            boxShadow: "0 0 12px rgba(20,184,166,0.4)",
+            marginBottom: 28,
+            boxShadow: "0 0 14px rgba(20,184,166,0.5)",
           }}
         >
           Credits: {credits}
         </div>
 
-        {/* Art Styles Pill Dropdown */}
-        <label style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        {/* Art Style Dropdown */}
+        <label
+          style={{
+            fontSize: 13,
+            color: "var(--text-muted)",
+            marginBottom: 6,
+            display: "block",
+          }}
+        >
           Art Styles
         </label>
 
@@ -92,16 +119,17 @@ export default function Sidebar({
           onChange={(e) => setArtStyle(e.target.value)}
           style={{
             width: "100%",
-            marginTop: 8,
-            marginBottom: 28,
+            height: 48,
+            marginBottom: 32,
             borderRadius: 999,
-            padding: "12px 16px",
+            padding: "0 16px",
             background: "var(--accent)",
             color: "#022c28",
-            fontWeight: 600,
+            fontWeight: 700,
             border: "none",
-            boxShadow: "0 0 14px rgba(20,184,166,0.6)",
+            fontSize: 15,
             cursor: "pointer",
+            boxShadow: "0 0 18px rgba(20,184,166,0.75)",
           }}
         >
           {artStyles.map((s) => (
@@ -112,7 +140,14 @@ export default function Sidebar({
         </select>
 
         {/* Strength Slider */}
-        <label style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        <label
+          style={{
+            fontSize: 13,
+            color: "var(--text-muted)",
+            marginBottom: 6,
+            display: "block",
+          }}
+        >
           Strength: {strength}
         </label>
 
@@ -124,15 +159,15 @@ export default function Sidebar({
           onChange={(e) => setStrength(Number(e.target.value))}
           style={{
             width: "100%",
-            marginTop: 8,
-            appearance: "none",
             height: 6,
+            appearance: "none",
             borderRadius: 999,
-            background: "linear-gradient(to right, var(--accent), var(--accent))",
-            boxShadow: "0 0 10px rgba(20,184,166,0.6)",
+            background: "rgba(20,184,166,0.4)",
+            boxShadow: "0 0 12px rgba(20,184,166,0.6)",
           }}
         />
 
+        {/* Slider Thumb */}
         <style jsx>{`
           input[type="range"]::-webkit-slider-thumb {
             appearance: none;
@@ -140,8 +175,18 @@ export default function Sidebar({
             height: 18px;
             border-radius: 50%;
             background: var(--accent);
-            box-shadow: 0 0 12px rgba(20,184,166,0.9);
+            box-shadow: 0 0 16px rgba(20,184,166,0.9);
             cursor: pointer;
+          }
+
+          input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 16px rgba(20,184,166,0.9);
+            cursor: pointer;
+            border: none;
           }
         `}</style>
       </aside>
