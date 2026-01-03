@@ -1,42 +1,43 @@
 import { cookies } from "next/headers"
+import { db } from "./db"
+import { randomUUID } from "crypto"
+import { supabaseServer } from "./supabaseServer"
 
-const CREDITS_KEY = "aiexor_credits"
+async function getUserId() {
+  const supabase = supabaseServer()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-function getStore() {
-  return cookies()
+  if (user) {
+    db.prepare(`
+      INSERT OR IGNORE INTO users (id, credits)
+      VALUES (?, 0)
+    `).run(user.id)
+    return user.id
+  }
+
+  // guest fallback
+  const store = cookies()
+  let id = store.get("uid")?.value
+  if (!id) {
+    id = randomUUID()
+    store.set("uid", id, { httpOnly: true, path: "/" })
+    db.prepare(`INSERT OR IGNORE INTO users (id, credits) VALUES (?, 0)`).run(id)
+  }
+  return id
 }
 
-export function getCredits(): number {
-  const store = getStore()
-  const raw = store.get(CREDITS_KEY)?.value
-  const credits = raw ? parseInt(raw, 10) : 0
-  return Number.isNaN(credits) ? 0 : credits
+export async function getCredits() {
+  const id = await getUserId()
+  const row = db.prepare("SELECT credits FROM users WHERE id=?").get(id)
+  return row?.credits ?? 0
 }
 
-export function addCredits(amount: number) {
-  if (amount <= 0) return
-
-  const store = getStore()
-  const current = getCredits()
-
-  store.set(CREDITS_KEY, String(current + amount), {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax",
-  })
-}
-
-export function consumeCredit(): boolean {
-  const store = getStore()
-  const current = getCredits()
-
-  if (current < 1) return false
-
-  store.set(CREDITS_KEY, String(current - 1), {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax",
-  })
-
+export async function consumeCredit() {
+  const id = await getUserId()
+  const row = db.prepare("SELECT credits FROM users WHERE id=?").get(id)
+  if (!row || row.credits < 1) return false
+  db.prepare("UPDATE users SET credits = credits - 1 WHERE id=?").run(id)
   return true
 }

@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar"
 import PromptBar from "@/components/PromptBar"
 import ImageCanvas from "@/components/ImageCanvas"
 import ImageLightbox from "@/components/ImageLightbox"
+import AuthButton from "@/components/AuthButton"
 import artStyles from "@/lib/artStyles"
 
 export default function Page() {
@@ -55,7 +56,19 @@ export default function Page() {
 
   return (
     <main className="canvas">
-      {/* Mobile Sidebar Toggle */}
+      {/* Auth Button (Top Right) */}
+      <div
+        style={{
+          position: "fixed",
+          top: 16,
+          right: 16,
+          zIndex: 60,
+        }}
+      >
+        <AuthButton />
+      </div>
+
+      {/* Sidebar Toggle (Top Left – Mobile Safe) */}
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
@@ -90,7 +103,7 @@ export default function Page() {
         credits={credits}
       />
 
-      {/* Image Area */}
+      {/* Image Output */}
       {imageSrc ? (
         <div
           className="image-wrapper"
