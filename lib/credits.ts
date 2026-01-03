@@ -1,36 +1,42 @@
 import { supabaseServer } from "./supabaseServer"
 
-export async function getCredits() {
+export async function getCredits(userId: string) {
   const supabase = supabaseServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return 0
 
   const { data } = await supabase
     .from("users")
     .select("credits")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single()
 
   return data?.credits ?? 0
 }
 
-export async function consumeCredit() {
+export async function ensureUser(userId: string) {
   const supabase = supabaseServer()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  await supabase.from("users").upsert({
+    id: userId,
+    credits: 0,
+  })
+}
 
-  if (!user) return false
+export async function addCredits(userId: string, amount: number) {
+  const supabase = supabaseServer()
+
+  await supabase.rpc("increment_credits", {
+    user_id: userId,
+    amount,
+  })
+}
+
+export async function consumeCredit(userId: string) {
+  const supabase = supabaseServer()
 
   const { data } = await supabase
     .from("users")
     .select("credits")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single()
 
   if (!data || data.credits < 1) return false
@@ -38,22 +44,7 @@ export async function consumeCredit() {
   await supabase
     .from("users")
     .update({ credits: data.credits - 1 })
-    .eq("id", user.id)
+    .eq("id", userId)
 
   return true
-}
-
-export async function addCredits(amount: number) {
-  const supabase = supabaseServer()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return
-
-  await supabase.rpc("increment_credits", {
-    user_id: user.id,
-    amount,
-  })
 }

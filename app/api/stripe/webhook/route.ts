@@ -1,16 +1,33 @@
+import { NextRequest, NextResponse } from "next/server"
+import { stripe, PRICES } from "@/lib/stripe"
+import { addCredits } from "@/lib/credits"
 
-import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
-import { addCredits } from '@/lib/credits'
-import { headers } from 'next/headers'
-
-export async function POST(req: Request) {
-  const sig = headers().get('stripe-signature')!
+export async function POST(req: NextRequest) {
+  const sig = req.headers.get("stripe-signature")!
   const body = await req.text()
-  const event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
-  if (event.type === 'checkout.session.completed') {
-    const s:any = event.data.object
-    addCredits(parseInt(s.metadata.credits,10))
+
+  let event
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    )
+  } catch {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
-  return NextResponse.json({ ok:true })
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as any
+
+    const userId = session.metadata.user_id
+    const pack = session.metadata.pack
+
+    if (userId && PRICES[pack]) {
+      await addCredits(userId, PRICES[pack].credits)
+    }
+  }
+
+  return NextResponse.json({ received: true })
 }
