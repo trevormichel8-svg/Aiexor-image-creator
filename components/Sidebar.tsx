@@ -1,19 +1,17 @@
 "use client"
 
-import { useMemo, useState, useRef } from "react"
+import { useMemo, useState } from "react"
 import artStyles from "@/lib/artStyles"
 
 interface SidebarProps {
   open: boolean
   onClose: () => void
   artStyle: string
-  setArtStyle: (value: string) => void
+  setArtStyle: (v: string) => void
   strength: number
-  setStrength: (value: number) => void
+  setStrength: (v: number) => void
   credits: number
 }
-
-const ART_STYLES = artStyles
 
 export default function Sidebar({
   open,
@@ -25,88 +23,87 @@ export default function Sidebar({
   credits,
 }: SidebarProps) {
   const [query, setQuery] = useState("")
-  const startX = useRef<number | null>(null)
 
-  const filteredStyles = useMemo(() => {
-    if (!query) return ART_STYLES
-    return ART_STYLES.filter((style) =>
-      style.toLowerCase().includes(query.toLowerCase())
+  const styles = useMemo(() => {
+    if (!query) return artStyles
+    return artStyles.filter((s) =>
+      s.toLowerCase().includes(query.toLowerCase())
     )
   }, [query])
 
-  function onTouchStart(e: React.TouchEvent) {
-    startX.current = e.touches[0].clientX
-  }
-
-  function onTouchEnd(e: React.TouchEvent) {
-    if (startX.current === null) return
-    if (e.changedTouches[0].clientX - startX.current > 80) {
-      onClose()
-    }
-    startX.current = null
-  }
-
   return (
     <>
-      <div
-        className={`sidebar-overlay ${open ? "open" : ""}`}
-        onClick={onClose}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      />
+      {open && (
+        <div
+          onClick={onClose}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+          }}
+        />
+      )}
 
       <aside
-        className={`sidebar ${open ? "open" : ""}`}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: open ? 0 : -340,
+          width: 320,
+          height: "100%",
+          background: "var(--bg-panel)",
+          padding: 24,
+          transition: "left 0.25s ease",
+          overflowY: "auto",
+        }}
       >
-        <button className="sidebar-close" onClick={onClose}>
-          ×
-        </button>
+        <h2 style={{ marginBottom: 8 }}>Art Settings</h2>
 
-        <h2 className="sidebar-title">Art Settings</h2>
-
-        {/* Credit badge */}
-        <div className="credits">
+        <div
+          style={{
+            background: "rgba(20,184,166,0.12)",
+            color: "var(--accent)",
+            padding: "6px 12px",
+            borderRadius: 999,
+            fontSize: 14,
+            width: "fit-content",
+            marginBottom: 24,
+          }}
+        >
           Credits: {credits}
         </div>
 
-        <div className="sidebar-content">
-          <label>Search Art Styles</label>
+        <label style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          Search styles
+        </label>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="e.g. cinematic, anime…"
+          style={{ marginBottom: 16 }}
+        />
 
-          <input
-            className="prompt-input"
-            placeholder="Type to filter styles…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+        <select
+          size={10}
+          value={artStyle}
+          onChange={(e) => setArtStyle(e.target.value)}
+          style={{ width: "100%", marginBottom: 24 }}
+        >
+          {styles.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
+        </select>
 
-          <select
-            size={8}
-            value={artStyle}
-            onChange={(e) => setArtStyle(e.target.value)}
-          >
-            {filteredStyles.map((style) => (
-              <option key={style} value={style}>
-                {style}
-              </option>
-            ))}
-          </select>
-
-          <div className="slider-block">
-            <div className="slider-label">
-              Strength: {strength}
-            </div>
-
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={strength}
-              onChange={(e) => setStrength(Number(e.target.value))}
-            />
-          </div>
-        </div>
+        <label style={{ fontSize: 13, color: "var(--text-muted)" }}>
+          Strength: {strength}
+        </label>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={strength}
+          onChange={(e) => setStrength(Number(e.target.value))}
+        />
       </aside>
     </>
   )
