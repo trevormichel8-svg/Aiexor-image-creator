@@ -1,16 +1,22 @@
 import OpenAI from "openai"
-import { requireOpenAIKey } from "./env"
+import { requireOpenAIKey } from "@/lib/env"
 
 const client = new OpenAI({
-  apiKey: requireOpenAIKey("OPENAI_API_KEY"),
+  apiKey: requireOpenAIKey(),
 })
 
-export async function generateImage(prompt: string) {
+export async function generateImage(prompt: string): Promise<string> {
   const result = await client.images.generate({
     model: "gpt-image-1",
     prompt,
     size: "1024x1024",
   })
 
-  return result.data[0].url!
+  const imageBase64 = result.data[0]?.b64_json
+
+  if (!imageBase64) {
+    throw new Error("No image returned from OpenAI")
+  }
+
+  return `data:image/png;base64,${imageBase64}`
 }
