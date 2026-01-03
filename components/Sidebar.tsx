@@ -19,94 +19,121 @@ export default function Sidebar({
   strength,
   setStrength,
 }: SidebarProps) {
+  if (!open) return null
+
+  const teal = "#2dd4bf"
+
   return (
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-40 bg-black/70 transition ${
-          open ? "block" : "hidden"
-        }`}
         onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.7)",
+          zIndex: 40,
+        }}
       />
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-72
-          bg-[#0b1416]
-          border-r border-teal-500/30
-          shadow-[0_0_40px_rgba(45,212,191,0.35)]
-          transform transition-transform duration-300
-          ${open ? "translate-x-0" : "-translate-x-full"}`}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "100%",
+          width: 280,
+          background: "#0b1416",
+          borderRight: `1px solid ${teal}55`,
+          boxShadow: `0 0 40px ${teal}55`,
+          zIndex: 50,
+          padding: 20,
+        }}
       >
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4
-            text-teal-400 text-xl
-            rounded-full w-9 h-9
-            flex items-center justify-center
-            bg-black/40
-            shadow-[0_0_12px_rgba(45,212,191,0.6)]
-            hover:bg-black/70"
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "#00000088",
+            color: teal,
+            fontSize: 22,
+            boxShadow: `0 0 12px ${teal}`,
+          }}
         >
           ×
         </button>
 
-        <div className="p-5 space-y-6">
-          <h2 className="text-lg font-semibold text-teal-400">
-            Art Settings
-          </h2>
+        <h2
+          style={{
+            color: teal,
+            fontSize: 18,
+            fontWeight: 600,
+            marginBottom: 24,
+          }}
+        >
+          Art Settings
+        </h2>
 
-          {/* Art Style Dropdown */}
-          <div className="space-y-2">
-            <label className="text-sm text-teal-300">
-              Art Style
-            </label>
+        {/* Art Style */}
+        <label style={{ color: "#9fe5dd", fontSize: 14 }}>
+          Art Style
+        </label>
 
-            <select
-              value={artStyle}
-              onChange={(e) => setArtStyle(e.target.value)}
-              className="
-                w-full
-                rounded-full
-                px-4 py-2
-                bg-[#081214]
-                border border-teal-500/40
-                text-teal-200
-                outline-none
-                shadow-[0_0_12px_rgba(45,212,191,0.35)]
-                focus:border-teal-400
-              "
-            >
-              {artStyles.map((style) => (
-                <option key={style} value={style}>
-                  {style}
-                </option>
-              ))}
-            </select>
-          </div>
+        <select
+          value={artStyle}
+          onChange={(e) => setArtStyle(e.target.value)}
+          style={{
+            width: "100%",
+            marginTop: 8,
+            marginBottom: 24,
+            padding: "10px 14px",
+            borderRadius: 999,
+            background: "#081214",
+            color: "#d1faf5",
+            border: `1px solid ${teal}88`,
+            boxShadow: `0 0 12px ${teal}55`,
+            outline: "none",
+          }}
+        >
+          {artStyles.map((style) => (
+            <option key={style} value={style}>
+              {style}
+            </option>
+          ))}
+        </select>
 
-          {/* Strength Slider */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-teal-300">
-              <span>Strength</span>
-              <span>{strength}</span>
-            </div>
-
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={strength}
-              onChange={(e) => setStrength(Number(e.target.value))}
-              className="
-                w-full
-                accent-teal-400
-                cursor-pointer
-              "
-            />
-          </div>
+        {/* Strength */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            color: "#9fe5dd",
+            fontSize: 14,
+            marginBottom: 6,
+          }}
+        >
+          <span>Strength</span>
+          <span>{strength}</span>
         </div>
+
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={strength}
+          onChange={(e) => setStrength(Number(e.target.value))}
+          style={{
+            width: "100%",
+            accentColor: teal,
+          }}
+        />
       </aside>
     </>
   )
