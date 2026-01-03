@@ -2,7 +2,11 @@ import { supabaseServer } from "./supabaseServer"
 
 export async function getCredits() {
   const supabase = supabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) return 0
 
   const { data } = await supabase
@@ -16,7 +20,11 @@ export async function getCredits() {
 
 export async function consumeCredit() {
   const supabase = supabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) return false
 
   const { data } = await supabase
@@ -35,13 +43,17 @@ export async function consumeCredit() {
   return true
 }
 
-export async function addCredits(n: number) {
+export async function addCredits(amount: number) {
   const supabase = supabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) return
 
   await supabase.rpc("increment_credits", {
-    uid: user.id,
-    amount: n,
+    user_id: user.id,
+    amount,
   })
 }
