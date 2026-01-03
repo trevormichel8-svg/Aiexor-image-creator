@@ -12,9 +12,7 @@ export default function Page() {
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
-
-  // NEW: credits state
-  const [credits, setCredits] = useState<number>(0)
+  const [credits, setCredits] = useState(0)
 
   const [prompt, setPrompt] = useState("")
   const [artStyle, setArtStyle] = useState<string>(artStyles[0] ?? "")
@@ -22,7 +20,6 @@ export default function Page() {
 
   async function handleGenerate() {
     if (!prompt.trim() || loading) return
-
     setLoading(true)
 
     try {
@@ -38,20 +35,19 @@ export default function Page() {
 
       const data = await res.json()
 
-      // Always update credits from API response
       if (typeof data.credits === "number") {
         setCredits(data.credits)
       }
 
       if (!res.ok) {
-        console.error("Generation failed:", data.error)
+        console.error(data.error)
         return
       }
 
       setImageSrc(data.imageUrl)
       setLightboxOpen(false)
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -75,7 +71,7 @@ export default function Page() {
         setArtStyle={setArtStyle}
         strength={strength}
         setStrength={setStrength}
-        credits={credits}   {/* ✅ FIX */}
+        credits={credits}
       />
 
       {imageSrc ? (
