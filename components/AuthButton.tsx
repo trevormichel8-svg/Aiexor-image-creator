@@ -1,39 +1,42 @@
 "use client"
 
 import { supabase } from "@/lib/supabase"
+import { useEffect, useState } from "react"
 
 export default function AuthButton() {
-  async function signIn() {
-    const email = prompt("Enter your email")
-    if (!email) return
+  const [user, setUser] = useState<any>(null)
 
-    await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin },
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user)
     })
 
-    alert("Check your email for the login link.")
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function signIn() {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+    })
   }
 
   async function signOut() {
     await supabase.auth.signOut()
-    location.reload()
   }
 
-  return (
-    <button
-      onClick={signIn}
-      style={{
-        background: "var(--accent)",
-        borderRadius: 999,
-        padding: "8px 14px",
-        boxShadow: "0 0 12px rgba(20,184,166,.8)",
-        border: "none",
-        fontWeight: 600,
-        cursor: "pointer",
-      }}
-    >
-      Sign In
+  return user ? (
+    <button onClick={signOut} className="teal-glow-btn">
+      Sign out
+    </button>
+  ) : (
+    <button onClick={signIn} className="teal-glow-btn">
+      Sign in
     </button>
   )
 }
