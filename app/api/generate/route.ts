@@ -31,9 +31,9 @@ export async function POST(req: NextRequest) {
 
   try {
     // Credit check
-    if (!consumeCredit()) {
+    if (!(await consumeCredit())) {
       return NextResponse.json(
-        { error: "Out of credits", credits: getCredits() },
+        { error: "Out of credits", credits: await getCredits() },
         { status: 402 }
       )
     }

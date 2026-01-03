@@ -1,43 +1,47 @@
-import { cookies } from "next/headers"
-import { db } from "./db"
-import { randomUUID } from "crypto"
 import { supabaseServer } from "./supabaseServer"
 
-async function getUserId() {
-  const supabase = supabaseServer()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (user) {
-    db.prepare(`
-      INSERT OR IGNORE INTO users (id, credits)
-      VALUES (?, 0)
-    `).run(user.id)
-    return user.id
-  }
-
-  // guest fallback
-  const store = cookies()
-  let id = store.get("uid")?.value
-  if (!id) {
-    id = randomUUID()
-    store.set("uid", id, { httpOnly: true, path: "/" })
-    db.prepare(`INSERT OR IGNORE INTO users (id, credits) VALUES (?, 0)`).run(id)
-  }
-  return id
-}
-
 export async function getCredits() {
-  const id = await getUserId()
-  const row = db.prepare("SELECT credits FROM users WHERE id=?").get(id)
-  return row?.credits ?? 0
+  const supabase = supabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return 0
+
+  const { data } = await supabase
+    .from("users")
+    .select("credits")
+    .eq("id", user.id)
+    .single()
+
+  return data?.credits ?? 0
 }
 
 export async function consumeCredit() {
-  const id = await getUserId()
-  const row = db.prepare("SELECT credits FROM users WHERE id=?").get(id)
-  if (!row || row.credits < 1) return false
-  db.prepare("UPDATE users SET credits = credits - 1 WHERE id=?").run(id)
+  const supabase = supabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const { data } = await supabase
+    .from("users")
+    .select("credits")
+    .eq("id", user.id)
+    .single()
+
+  if (!data || data.credits < 1) return false
+
+  await supabase
+    .from("users")
+    .update({ credits: data.credits - 1 })
+    .eq("id", user.id)
+
   return true
+}
+
+export async function addCredits(n: number) {
+  const supabase = supabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase.rpc("increment_credits", {
+    uid: user.id,
+    amount: n,
+  })
 }
