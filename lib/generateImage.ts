@@ -1,8 +1,8 @@
 import OpenAI from "openai"
-import { requireEnv } from "./env"
+import { requireOpenAIKey } from "./env"
 
 const client = new OpenAI({
-  apiKey: requireEnv("OPENAI_API_KEY"),
+  apiKey: requireOpenAIKey("OPENAI_API_KEY"),
 })
 
 export async function generateImage(prompt: string) {

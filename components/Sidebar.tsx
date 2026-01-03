@@ -1,61 +1,31 @@
 "use client"
 
-import { useImageSettings } from "@/lib/useImageSettings"
 import { useMemo, useState, useRef } from "react"
+import artStyles from "@/lib/artStyles"
 
 interface SidebarProps {
   open: boolean
   onClose: () => void
+  artStyle: string
+  setArtStyle: (value: string) => void
+  strength: number
+  setStrength: (value: number) => void
 }
 
-const ART_STYLES = [
-  // Realism / Photography
-  "Photorealistic", "Ultra Realistic", "Cinematic", "Hyperrealism",
-  "HDR Photography", "Studio Lighting", "Portrait Photography",
-  "Macro Photography", "Long Exposure", "Film Grain", "35mm Film",
-  "Analog Film", "Double Exposure",
+// Use the shared art styles list exported from the library. Defining the list
+// in a single location avoids accidental divergence between different UI
+// components. If more styles are added they will automatically be available
+// here without further changes.
+const ART_STYLES = artStyles
 
-  // Illustration
-  "Digital Illustration", "Concept Art", "Character Design",
-  "Environment Concept", "Matte Painting", "Ink Illustration",
-  "Line Art", "Flat Illustration", "Coloring Book",
-
-  // Anime / Manga
-  "Anime", "Manga", "Chibi", "Studio Ghibli Style", "Cyberpunk Anime",
-  "Mecha Anime", "Anime Portrait",
-
-  // Painting
-  "Oil Painting", "Watercolor", "Acrylic Painting", "Gouache",
-  "Impasto", "Digital Painting",
-
-  // Art Movements
-  "Indigenous", "Impressionism", "Expressionism", "Surrealism", "Cubism",
-  "Pop Art", "Minimalism", "Abstract Expressionism",
-
-  // Sci-Fi / Fantasy
-  "Cyberpunk", "Steampunk", "Solarpunk", "Dark Fantasy",
-  "Epic Fantasy", "Sci-Fi Concept Art", "Alien World",
-
-  // 3D / CGI
-  "3D Render", "Blender Render", "Unreal Engine",
-  "Low Poly", "Voxel Art",
-
-  // Retro / Stylized
-  "Pixel Art", "8-bit", "Vaporwave", "Synthwave",
-  "Glitch Art", "Neon Noir", "Mosaic",
-
-  // Design
-  "Graphic Design", "Poster Design", "Album Cover",
-  "Book Cover", "Vector Art",
-
-  // Horror / Experimental
-  "Horror", "Cosmic Horror", "Lovecraftian",
-  "Generative Art", "Fractal Art", "Mixed Media",
-]
-
-export default function Sidebar({ open, onClose }: SidebarProps) {
-  const { artStyle, setArtStyle, strength, setStrength } =
-    useImageSettings()
+export default function Sidebar({
+  open,
+  onClose,
+  artStyle,
+  setArtStyle,
+  strength,
+  setStrength,
+}: SidebarProps) {
 
   const [query, setQuery] = useState("")
   const startX = useRef<number | null>(null)

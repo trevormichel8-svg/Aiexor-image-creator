@@ -1,5 +1,5 @@
-export function requireEnv(name: string): string {
-  const value = process.env[name]
-  if (!value) throw new Error(`Missing env var: ${name}`)
-  return value
+export function requireOpenAIKey() {
+  const key = process.env.OPENAI_API_KEY
+  if (!key) throw new Error("Missing OPENAI_API_KEY")
+  return key
 }
