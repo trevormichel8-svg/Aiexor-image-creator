@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar"
 import PromptBar from "@/components/PromptBar"
 import ImageCanvas from "@/components/ImageCanvas"
 import ImageLightbox from "@/components/ImageLightbox"
+import BuyCreditsModal from "@/components/BuyCreditsModal"
 import AuthButton from "@/components/AuthButton"
 import artStyles from "@/lib/artStyles"
 
@@ -13,7 +14,7 @@ export default function Page() {
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [credits, setCredits] = useState(0)
+  const [buyOpen, setBuyOpen] = useState(false)
 
   const [prompt, setPrompt] = useState("")
   const [artStyle, setArtStyle] = useState<string>(artStyles[0] ?? "")
@@ -21,6 +22,7 @@ export default function Page() {
 
   async function handleGenerate() {
     if (!prompt.trim() || loading) return
+
     setLoading(true)
 
     try {
@@ -36,12 +38,8 @@ export default function Page() {
 
       const data = await res.json()
 
-      if (typeof data.credits === "number") {
-        setCredits(data.credits)
-      }
-
       if (!res.ok) {
-        console.error(data.error)
+        alert(data.error ?? "Generation failed")
         return
       }
 
@@ -49,44 +47,38 @@ export default function Page() {
       setLightboxOpen(false)
     } catch (err) {
       console.error(err)
+      alert("Unexpected error")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <main className="canvas">
-      {/* Auth Button (Top Right) */}
-      <div
-        style={{
-          position: "fixed",
-          top: 16,
-          right: 16,
-          zIndex: 60,
-        }}
-      >
+    <main className="canvas bg-[#0b1416] text-white min-h-screen">
+      {/* Auth button */}
+      <div style={{ position: "fixed", top: 16, right: 16, zIndex: 60 }}>
         <AuthButton />
       </div>
 
-      {/* Sidebar Toggle (Top Left – Mobile Safe) */}
+      {/* Buy credits button */}
+      <button
+        onClick={() => setBuyOpen(true)}
+        className="fixed bottom-6 right-6 z-40
+                   px-4 py-2 rounded-full
+                   bg-teal-600 text-black font-medium
+                   shadow-[0_0_18px_rgba(45,212,191,0.6)]
+                   hover:bg-teal-500 transition"
+      >
+        Buy Credits
+      </button>
+
+      {/* Sidebar toggle */}
       {!sidebarOpen && (
         <button
+          className="sidebar-button fixed top-6 left-6
+                     text-teal-400 text-xl
+                     shadow-[0_0_12px_rgba(45,212,191,0.5)]"
           onClick={() => setSidebarOpen(true)}
-          style={{
-            position: "fixed",
-            top: 14,
-            left: 14,
-            zIndex: 60,
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            background: "var(--accent)",
-            color: "#022c28",
-            border: "none",
-            fontSize: 20,
-            cursor: "pointer",
-            boxShadow: "0 0 16px rgba(20,184,166,0.9)",
-          }}
         >
           ☰
         </button>
@@ -100,52 +92,32 @@ export default function Page() {
         setArtStyle={setArtStyle}
         strength={strength}
         setStrength={setStrength}
-        credits={credits}
       />
 
-      {/* Image Output */}
-      {imageSrc ? (
-        <div
-          className="image-wrapper"
-          onClick={() => setLightboxOpen(true)}
-          style={{
-            marginTop: 32,
-            cursor: "zoom-in",
-          }}
-        >
-          <ImageCanvas src={imageSrc} />
-        </div>
-      ) : (
-        <div
-          className="empty-state"
-          style={{
-            marginTop: 120,
-            textAlign: "center",
-            color: "var(--text-muted)",
-          }}
-        >
-          <h2 style={{ marginBottom: 8 }}>Create your first image</h2>
-          <p style={{ fontSize: 14 }}>
-            Describe what you want to generate below
-          </p>
-        </div>
-      )}
+      {/* Image output */}
+      <div className="flex justify-center items-center mt-20 px-4">
+        {imageSrc ? (
+          <div
+            className="image-wrapper cursor-zoom-in"
+            onClick={() => setLightboxOpen(true)}
+          >
+            <ImageCanvas src={imageSrc} />
+          </div>
+        ) : (
+          <div className="empty-state text-center opacity-70">
+            <h2 className="text-xl">Create Your First Image</h2>
+          </div>
+        )}
+      </div>
 
-      {/* Loading State */}
+      {/* Loading */}
       {loading && (
-        <div
-          style={{
-            marginTop: 24,
-            textAlign: "center",
-            color: "var(--accent)",
-            textShadow: "0 0 10px rgba(20,184,166,0.6)",
-          }}
-        >
+        <div className="p-6 text-center text-teal-400">
           Generating image…
         </div>
       )}
 
-      {/* Prompt Bar */}
+      {/* Prompt bar */}
       <PromptBar
         onGenerate={handleGenerate}
         prompt={prompt}
@@ -159,6 +131,12 @@ export default function Page() {
           onClose={() => setLightboxOpen(false)}
         />
       )}
+
+      {/* Buy credits modal */}
+      <BuyCreditsModal
+        open={buyOpen}
+        onClose={() => setBuyOpen(false)}
+      />
     </main>
   )
 }
