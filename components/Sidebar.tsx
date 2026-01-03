@@ -10,12 +10,9 @@ interface SidebarProps {
   setArtStyle: (value: string) => void
   strength: number
   setStrength: (value: number) => void
+  credits: number
 }
 
-// Use the shared art styles list exported from the library. Defining the list
-// in a single location avoids accidental divergence between different UI
-// components. If more styles are added they will automatically be available
-// here without further changes.
 const ART_STYLES = artStyles
 
 export default function Sidebar({
@@ -25,8 +22,8 @@ export default function Sidebar({
   setArtStyle,
   strength,
   setStrength,
+  credits,
 }: SidebarProps) {
-
   const [query, setQuery] = useState("")
   const startX = useRef<number | null>(null)
 
@@ -43,20 +40,15 @@ export default function Sidebar({
 
   function onTouchEnd(e: React.TouchEvent) {
     if (startX.current === null) return
-
-    const endX = e.changedTouches[0].clientX
-    const deltaX = endX - startX.current
-
-    if (deltaX > 80) {
+    if (e.changedTouches[0].clientX - startX.current > 80) {
       onClose()
     }
-
     startX.current = null
   }
 
   return (
     <>
-      <div><div className='credits'>Credits: {credits}</div>
+      <div
         className={`sidebar-overlay ${open ? "open" : ""}`}
         onClick={onClose}
         onTouchStart={onTouchStart}
@@ -74,7 +66,12 @@ export default function Sidebar({
 
         <h2 className="sidebar-title">Art Settings</h2>
 
-        <div><div className='credits'>Credits: {credits}</div> className="sidebar-content">
+        {/* Credit badge */}
+        <div className="credits">
+          Credits: {credits}
+        </div>
+
+        <div className="sidebar-content">
           <label>Search Art Styles</label>
 
           <input
@@ -96,8 +93,8 @@ export default function Sidebar({
             ))}
           </select>
 
-          <div><div className='credits'>Credits: {credits}</div> className="slider-block">
-            <div><div className='credits'>Credits: {credits}</div> className="slider-label">
+          <div className="slider-block">
+            <div className="slider-label">
               Strength: {strength}
             </div>
 
@@ -106,9 +103,7 @@ export default function Sidebar({
               min={0}
               max={100}
               value={strength}
-              onChange={(e) =>
-                setStrength(Number(e.target.value))
-              }
+              onChange={(e) => setStrength(Number(e.target.value))}
             />
           </div>
         </div>

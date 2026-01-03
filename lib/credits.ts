@@ -1,34 +1,42 @@
+import { cookies } from "next/headers"
 
-import { cookies } from 'next/headers'
-import { db } from './db'
-import { randomUUID } from 'crypto'
+const CREDITS_KEY = "aiexor_credits"
 
-function getUserId() {
-  const store = cookies()
-  let id = store.get('uid')?.value
-  if (!id) {
-    id = randomUUID()
-    store.set('uid', id, { httpOnly: true, path: '/' })
-    db.prepare('INSERT OR IGNORE INTO users (id, credits) VALUES (?, 0)').run(id)
-  }
-  return id
+function getStore() {
+  return cookies()
 }
 
-export function getCredits() {
-  const id = getUserId()
-  const row = db.prepare('SELECT credits FROM users WHERE id=?').get(id)
-  return row?.credits ?? 0
+export function getCredits(): number {
+  const store = getStore()
+  const raw = store.get(CREDITS_KEY)?.value
+  const credits = raw ? parseInt(raw, 10) : 0
+  return Number.isNaN(credits) ? 0 : credits
 }
 
-export function addCredits(n: number) {
-  const id = getUserId()
-  db.prepare('UPDATE users SET credits = credits + ? WHERE id=?').run(n, id)
+export function addCredits(amount: number) {
+  if (amount <= 0) return
+
+  const store = getStore()
+  const current = getCredits()
+
+  store.set(CREDITS_KEY, String(current + amount), {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+  })
 }
 
-export function consumeCredit() {
-  const id = getUserId()
-  const cur = getCredits()
-  if (cur < 1) return false
-  db.prepare('UPDATE users SET credits = credits - 1 WHERE id=?').run(id)
+export function consumeCredit(): boolean {
+  const store = getStore()
+  const current = getCredits()
+
+  if (current < 1) return false
+
+  store.set(CREDITS_KEY, String(current - 1), {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+  })
+
   return true
 }
