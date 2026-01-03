@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const imageUrl = await generateImage(compiledPrompt)
 
     return NextResponse.json({ imageUrl })
-  } catch {
+  } catch (err) {
     return NextResponse.json({ error: (process.env.NODE_ENV==="development" ? String(err) : "Generation failed") }, { status: 500 })
   }
 }
