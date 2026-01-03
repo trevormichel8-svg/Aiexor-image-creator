@@ -57,11 +57,22 @@ export default function Page() {
     <main className="canvas">
       {!sidebarOpen && (
         <button
-          className="sidebar-button"
-          onClick={() => setSidebarOpen(true)}
-        >
-          ☰
-        </button>
+  className="sidebar-button"
+  onClick={() => setSidebarOpen(true)}
+  style={{
+    background: "var(--accent)",
+    color: "#022c28",
+    borderRadius: "50%",
+    width: 44,
+    height: 44,
+    border: "none",
+    boxShadow: "0 0 16px rgba(20,184,166,0.8)",
+    cursor: "pointer",
+    fontSize: 20,
+  }}
+>
+  ☰
+</button>
       )}
 
       <Sidebar

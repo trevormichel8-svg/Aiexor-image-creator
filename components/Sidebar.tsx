@@ -1,6 +1,5 @@
 "use client"
 
-import { useMemo, useState } from "react"
 import artStyles from "@/lib/artStyles"
 
 interface SidebarProps {
@@ -22,15 +21,6 @@ export default function Sidebar({
   setStrength,
   credits,
 }: SidebarProps) {
-  const [query, setQuery] = useState("")
-
-  const styles = useMemo(() => {
-    if (!query) return artStyles
-    return artStyles.filter((s) =>
-      s.toLowerCase().includes(query.toLowerCase())
-    )
-  }, [query])
-
   return (
     <>
       {open && (
@@ -57,53 +47,103 @@ export default function Sidebar({
           overflowY: "auto",
         }}
       >
-        <h2 style={{ marginBottom: 8 }}>Art Settings</h2>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <h2>Art Settings</h2>
 
+          <button
+            onClick={onClose}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "var(--accent)",
+              fontSize: 22,
+              cursor: "pointer",
+              textShadow: "0 0 10px var(--accent)",
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Credits */}
         <div
           style={{
-            background: "rgba(20,184,166,0.12)",
-            color: "var(--accent)",
-            padding: "6px 12px",
-            borderRadius: 999,
-            fontSize: 14,
-            width: "fit-content",
+            marginTop: 12,
             marginBottom: 24,
+            background: "rgba(20,184,166,0.15)",
+            color: "var(--accent)",
+            padding: "8px 14px",
+            borderRadius: 999,
+            width: "fit-content",
+            boxShadow: "0 0 12px rgba(20,184,166,0.4)",
           }}
         >
           Credits: {credits}
         </div>
 
+        {/* Art Styles Pill Dropdown */}
         <label style={{ fontSize: 13, color: "var(--text-muted)" }}>
-          Search styles
+          Art Styles
         </label>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="e.g. cinematic, anime…"
-          style={{ marginBottom: 16 }}
-        />
 
         <select
-          size={10}
           value={artStyle}
           onChange={(e) => setArtStyle(e.target.value)}
-          style={{ width: "100%", marginBottom: 24 }}
+          style={{
+            width: "100%",
+            marginTop: 8,
+            marginBottom: 28,
+            borderRadius: 999,
+            padding: "12px 16px",
+            background: "var(--accent)",
+            color: "#022c28",
+            fontWeight: 600,
+            border: "none",
+            boxShadow: "0 0 14px rgba(20,184,166,0.6)",
+            cursor: "pointer",
+          }}
         >
-          {styles.map((s) => (
-            <option key={s}>{s}</option>
+          {artStyles.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
 
+        {/* Strength Slider */}
         <label style={{ fontSize: 13, color: "var(--text-muted)" }}>
           Strength: {strength}
         </label>
+
         <input
           type="range"
           min={0}
           max={100}
           value={strength}
           onChange={(e) => setStrength(Number(e.target.value))}
+          style={{
+            width: "100%",
+            marginTop: 8,
+            appearance: "none",
+            height: 6,
+            borderRadius: 999,
+            background: "linear-gradient(to right, var(--accent), var(--accent))",
+            boxShadow: "0 0 10px rgba(20,184,166,0.6)",
+          }}
         />
+
+        <style jsx>{`
+          input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 12px rgba(20,184,166,0.9);
+            cursor: pointer;
+          }
+        `}</style>
       </aside>
     </>
   )
