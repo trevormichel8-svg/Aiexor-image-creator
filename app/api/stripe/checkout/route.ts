@@ -1,47 +1,58 @@
 import { NextRequest, NextResponse } from "next/server"
-import { stripe, PRICES } from "@/lib/stripe"
-import { supabaseServer } from "@/lib/supabaseServer"
+import { getStripe, PRICES } from "@/lib/stripe"
 
 export async function POST(req: NextRequest) {
-  const { plan } = await req.json()
+  try {
+    const body = await req.json()
+    const { pack } = body
 
-  const price = PRICES[plan as keyof typeof PRICES]
-  if (!price) {
-    return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
-  }
+    if (!pack || !PRICES[pack]) {
+      return NextResponse.json(
+        { error: "Invalid credit pack" },
+        { status: 400 }
+      )
+    }
 
-  const supabase = supabaseServer()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const stripe = getStripe()
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+    const price = PRICES[pack]
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    payment_method_types: ["card"],
-    customer_email: user.email ?? undefined,
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: `${price.credits} AI Credits`,
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `${price.credits} Credits`,
+              description: "Aiexor AI Image Credits",
+            },
+            unit_amount: price.amount, // cents
           },
-          unit_amount: price.amount,
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      metadata: {
+        credits: String(price.credits),
       },
-    ],
-    metadata: {
-      userId: user.id,
-      credits: String(price.credits),
-    },
-    success_url: `${process.env.NEXT_PUBLIC_SITE_URL}?success=1`,
-    cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}?canceled=1`,
-  })
+      success_url: "https://aiexor.com?payment=success",
+      cancel_url: "https://aiexor.com?payment=cancelled",
+    })
 
-  return NextResponse.json({ url: session.url })
+    if (!session.url) {
+      return NextResponse.json(
+        { error: "Failed to create checkout session" },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    console.error("Stripe checkout error:", err)
+    return NextResponse.json(
+      { error: "Checkout failed" },
+      { status: 500 }
+    )
+  }
 }

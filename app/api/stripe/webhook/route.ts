@@ -1,19 +1,25 @@
 import Stripe from "stripe"
-import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+export const runtime = "nodejs"
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2023-10-16",
+})
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // server only
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // SERVER ONLY
 )
 
 export async function POST(req: Request) {
+  const signature = req.headers.get("stripe-signature")
+  if (!signature) {
+    return new NextResponse("Missing Stripe signature", { status: 400 })
+  }
+
   const body = await req.text()
-  const signature = headers().get("stripe-signature")!
 
   let event: Stripe.Event
 
@@ -21,9 +27,10 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      webhookSecret
+      process.env.STRIPE_WEBHOOK_SECRET!
     )
-  } catch (err) {
+  } catch (err: any) {
+    console.error("Webhook verification failed:", err.message)
     return new NextResponse("Invalid signature", { status: 400 })
   }
 
@@ -31,32 +38,22 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session
 
     const userId = session.metadata?.user_id
-    if (!userId) {
-      return new NextResponse("Missing user ID", { status: 400 })
+    const credits = Number(session.metadata?.credits)
+
+    if (!userId || !credits) {
+      console.error("Missing metadata", session.metadata)
+      return new NextResponse("Missing metadata", { status: 400 })
     }
 
-    // Map Stripe price → credits
-    let creditsToAdd = 0
+    const { error } = await supabase.rpc("increment_credits", {
+      uid: userId,
+      amount: credits,
+      stripe_event_id: event.id,
+    })
 
-    switch (session.amount_total) {
-      case 699:
-        creditsToAdd = 20
-        break
-      case 1399:
-        creditsToAdd = 50
-        break
-      case 2499:
-        creditsToAdd = 100
-        break
-      default:
-        creditsToAdd = 0
-    }
-
-    if (creditsToAdd > 0) {
-      await supabase.rpc("increment_credits", {
-        uid: userId,
-        amount: creditsToAdd,
-      })
+    if (error) {
+      console.error("Credit increment failed:", error)
+      return new NextResponse("Database error", { status: 500 })
     }
   }
 
