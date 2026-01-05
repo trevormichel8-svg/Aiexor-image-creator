@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  // DO NOT pin apiVersion — fixes your TS errors permanently
-})
-
 /**
  * Canonical credit packs
  * Frontend MUST match these numbers
@@ -17,7 +13,21 @@ const CREDIT_PACKS: Record<number, { amount: number }> = {
 
 export async function POST(req: Request) {
   try {
-    const { credits } = await req.json()
+    const secretKey = process.env.STRIPE_SECRET_KEY
+
+    if (!secretKey) {
+      console.error("STRIPE_SECRET_KEY missing")
+      return NextResponse.json(
+        { error: "Stripe not configured" },
+        { status: 500 }
+      )
+    }
+
+    // ✅ Lazy init Stripe (CRITICAL FIX)
+    const stripe = new Stripe(secretKey)
+
+    const body = await req.json()
+    const credits = Number(body.credits)
 
     if (!credits || !CREDIT_PACKS[credits]) {
       return NextResponse.json(
@@ -51,7 +61,7 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (err: any) {
+  } catch (err) {
     console.error("Stripe checkout error:", err)
     return NextResponse.json(
       { error: "Checkout failed" },
