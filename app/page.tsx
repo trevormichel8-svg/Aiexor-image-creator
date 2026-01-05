@@ -7,68 +7,57 @@ export default function Page() {
   const { credits, refreshCredits } = useCredits()
   const [prompt, setPrompt] = useState("")
   const [loading, setLoading] = useState(false)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
 
-  // ✅ Run ONCE after Stripe redirect
+  // ✅ Stripe success handler
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-
     if (params.get("success")) {
       refreshCredits()
-
-      // clean URL so it doesn’t re-run on refresh
       window.history.replaceState({}, "", "/")
     }
   }, [refreshCredits])
 
   async function generateImage() {
     setLoading(true)
-
-    const res = await fetch("/api/generate", {
+    await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),
     })
-
-    const data = await res.json()
-
-    if (data.image) {
-      setImageUrl(data.image)
-    }
-
     setLoading(false)
   }
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center p-6">
-      <h1 className="text-2xl font-bold mb-4">Create Your First Image</h1>
+    <>
+      {/* Header */}
+      <header className="flex justify-between items-center px-6 py-4 border-b border-zinc-800">
+        <div className="font-semibold">Create Your First Image</div>
+        <div className="text-sm text-zinc-400">
+          Credits: <span className="text-teal-400">{credits}</span>
+        </div>
+      </header>
 
-      <div className="mb-4 text-sm text-gray-300">
-        Credits: <span className="font-semibold">{credits}</span>
+      {/* Canvas */}
+      <main className="flex-1"></main>
+
+      {/* Bottom Prompt Bar */}
+      <div className="fixed bottom-0 left-14 right-0 p-4 bg-zinc-950 border-t border-zinc-800">
+        <div className="flex gap-2 max-w-3xl mx-auto">
+          <input
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe your image..."
+            className="flex-1 rounded-full px-4 py-3 bg-zinc-900 border border-zinc-700 outline-none"
+          />
+          <button
+            onClick={generateImage}
+            disabled={loading || !prompt}
+            className="px-6 rounded-full bg-teal-600 hover:bg-teal-500 disabled:opacity-50"
+          >
+            {loading ? "..." : "Generate"}
+          </button>
+        </div>
       </div>
-
-      <input
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Describe your image..."
-        className="w-full max-w-xl p-3 rounded bg-zinc-900 border border-zinc-700 mb-4"
-      />
-
-      <button
-        onClick={generateImage}
-        disabled={loading || !prompt}
-        className="px-6 py-2 rounded bg-teal-600 hover:bg-teal-500 disabled:opacity-50"
-      >
-        {loading ? "Generating..." : "Generate"}
-      </button>
-
-      {imageUrl && (
-        <img
-          src={imageUrl}
-          alt="Generated"
-          className="mt-6 rounded max-w-full"
-        />
-      )}
-    </main>
+    </>
   )
 }
