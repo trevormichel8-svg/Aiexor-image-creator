@@ -3,9 +3,9 @@
 import { useState } from "react"
 
 const PLANS = [
-  { id: "20", label: "20 Credits", price: "$6.99" },
-  { id: "50", label: "50 Credits", price: "$13.99" },
-  { id: "100", label: "100 Credits", price: "$24.99" },
+  { credits: 20, label: "20 Credits", price: "$6.99" },
+  { credits: 50, label: "50 Credits", price: "$13.99" },
+  { credits: 100, label: "100 Credits", price: "$24.99" },
 ]
 
 export default function BuyCreditsModal({
@@ -15,25 +15,40 @@ export default function BuyCreditsModal({
   open: boolean
   onClose: () => void
 }) {
-  const [loading, setLoading] = useState<string | null>(null)
+  const [loading, setLoading] = useState<number | null>(null)
 
   if (!open) return null
 
-  async function checkout(planId: string) {
-    setLoading(planId)
+  async function checkout(credits: number) {
+    setLoading(credits)
 
-    const res = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: planId }),
-    })
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credits }),
+      })
 
-    const data = await res.json()
+      const text = await res.text()
 
-    if (data.url) {
-      window.location.href = data.url
-    } else {
-      alert("Failed to start checkout")
+      // 🔍 TEMP DEBUG (CRITICAL)
+      alert(`STATUS ${res.status}\n\n${text}`)
+
+      if (!res.ok) {
+        setLoading(null)
+        return
+      }
+
+      const data = JSON.parse(text)
+
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert("No checkout URL returned")
+        setLoading(null)
+      }
+    } catch (err: any) {
+      alert("Checkout JS error: " + err.message)
       setLoading(null)
     }
   }
@@ -48,9 +63,9 @@ export default function BuyCreditsModal({
         <div className="space-y-3">
           {PLANS.map((p) => (
             <button
-              key={p.id}
-              onClick={() => checkout(p.id)}
-              disabled={loading === p.id}
+              key={p.credits}
+              onClick={() => checkout(p.credits)}
+              disabled={loading === p.credits}
               className="w-full flex justify-between items-center px-4 py-3 rounded-lg
                          bg-teal-600/10 border border-teal-500/40
                          hover:bg-teal-500/20 transition
@@ -59,7 +74,7 @@ export default function BuyCreditsModal({
             >
               <span>{p.label}</span>
               <span className="font-medium">
-                {loading === p.id ? "Redirecting…" : p.price}
+                {loading === p.credits ? "Redirecting…" : p.price}
               </span>
             </button>
           ))}
