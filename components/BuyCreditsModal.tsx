@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+
+const supabase = createClientComponentClient()
 
 const PLANS = [
   { credits: 20, label: "20 Credits", price: "$6.99" },
@@ -22,40 +25,38 @@ export default function BuyCreditsModal({
   async function checkout(credits: number) {
     setLoading(credits)
 
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credits }),
-      })
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-      const text = await res.text()
+    if (!user) {
+      alert("Please sign in first")
+      setLoading(null)
+      return
+    }
 
-      // 🔍 TEMP DEBUG (CRITICAL)
-      alert(`STATUS ${res.status}\n\n${text}`)
+    const res = await fetch("/api/stripe/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.id,
+        credits,
+      }),
+    })
 
-      if (!res.ok) {
-        setLoading(null)
-        return
-      }
+    const data = await res.json()
 
-      const data = JSON.parse(text)
-
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        alert("No checkout URL returned")
-        setLoading(null)
-      }
-    } catch (err: any) {
-      alert("Checkout JS error: " + err.message)
+    if (data.url) {
+      window.location.href = data.url
+    } else {
+      alert(data.error || "Checkout failed")
       setLoading(null)
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
-      <div className="bg-[#0b1416] border border-teal-500/30 rounded-xl p-6 w-[90%] max-w-md shadow-[0_0_30px_rgba(45,212,191,0.35)]">
+      <div className="bg-[#0b1416] border border-teal-500/30 rounded-xl p-6 w-[90%] max-w-md">
         <h2 className="text-xl font-semibold text-teal-400 mb-4">
           Buy Credits
         </h2>
@@ -68,12 +69,10 @@ export default function BuyCreditsModal({
               disabled={loading === p.credits}
               className="w-full flex justify-between items-center px-4 py-3 rounded-lg
                          bg-teal-600/10 border border-teal-500/40
-                         hover:bg-teal-500/20 transition
-                         shadow-[0_0_12px_rgba(45,212,191,0.35)]
-                         text-teal-300"
+                         hover:bg-teal-500/20 transition text-teal-300"
             >
               <span>{p.label}</span>
-              <span className="font-medium">
+              <span>
                 {loading === p.credits ? "Redirecting…" : p.price}
               </span>
             </button>
@@ -82,7 +81,7 @@ export default function BuyCreditsModal({
 
         <button
           onClick={onClose}
-          className="mt-4 w-full text-sm text-teal-400 hover:text-teal-300"
+          className="mt-4 w-full text-sm text-teal-400"
         >
           Cancel
         </button>
