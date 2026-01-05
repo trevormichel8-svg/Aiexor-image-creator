@@ -1,17 +1,24 @@
-import "./globals.css";
-import type { Metadata } from "next";
+import "./globals.css"
+import type { Metadata } from "next"
+import { CreditsProvider } from "@/context/CreditsContext"
 
 export const metadata: Metadata = {
-  title: "Aiexor Image Creator",
-  description: "AI-powered image generation tool",
-};
+  title: "Aiexor",
+  description: "AI Image Generator",
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
-      <body className="bg-black text-white min-h-screen antialiased">
-        {children}
+      <body>
+        <CreditsProvider>
+          {children}
+        </CreditsProvider>
       </body>
     </html>
-  );
+  )
 }
