@@ -1,44 +1,18 @@
-export const dynamic = "force-dynamic"
-
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 
-/**
- * Canonical credit packs
- * Frontend MUST match these numbers
- */
-const CREDIT_PACKS: Record<number, { amount: number }> = {
-  20: { amount: 699 },
-  50: { amount: 1399 },
-  100: { amount: 2499 },
-}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const secretKey = process.env.STRIPE_SECRET_KEY
+    const { userId, credits } = await req.json()
 
-    if (!secretKey) {
-      console.error("STRIPE_SECRET_KEY missing")
+    if (!userId || !credits) {
       return NextResponse.json(
-        { error: "Stripe not configured" },
-        { status: 500 }
-      )
-    }
-
-    // ✅ Lazy init Stripe (CRITICAL FIX)
-    const stripe = new Stripe(secretKey)
-
-    const body = await req.json()
-    const credits = Number(body.credits)
-
-    if (!credits || !CREDIT_PACKS[credits]) {
-      return NextResponse.json(
-        { error: "Invalid credit pack" },
+        { error: "Missing userId or credits" },
         { status: 400 }
       )
     }
-
-    const pack = CREDIT_PACKS[credits]
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -48,26 +22,24 @@ export async function POST(req: Request) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `${credits} AI Image Credits`,
+              name: `${credits} Image Credits`,
             },
-            unit_amount: pack.amount,
+            unit_amount: credits * 10, // example: 1 credit = $0.10
           },
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}?success=1`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}?cancel=1`,
       metadata: {
+        user_id: userId,
         credits: String(credits),
       },
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cancel`,
     })
 
     return NextResponse.json({ url: session.url })
   } catch (err) {
-    console.error("Stripe checkout error:", err)
-    return NextResponse.json(
-      { error: "Checkout failed" },
-      { status: 500 }
-    )
+    console.error("Checkout error:", err)
+    return NextResponse.json({ error: "Stripe error" }, { status: 500 })
   }
 }
