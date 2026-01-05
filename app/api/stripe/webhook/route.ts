@@ -1,69 +1,56 @@
-import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
-import { createClient } from "@supabase/supabase-js"
+import { headers } from "next/headers"
+import { NextResponse } from "next/server"
 
-let stripe: Stripe | null = null
+export const runtime = "nodejs" // IMPORTANT for Stripe
 
-function getStripe() {
-  if (!stripe) {
-    const key = process.env.STRIPE_SECRET_KEY
-    if (!key) {
-      throw new Error("STRIPE_SECRET_KEY not set")
-    }
-    // IMPORTANT: do NOT pass apiVersion to avoid TS literal mismatch
-    stripe = new Stripe(key)
-  }
-  return stripe
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+if (!stripeSecretKey) {
+  throw new Error("Missing STRIPE_SECRET_KEY")
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // server-only
-)
+const stripe = new Stripe(stripeSecretKey)
 
-export async function POST(req: NextRequest) {
-  const body = await req.text()
-  const sig = req.headers.get("stripe-signature")
-
-  if (!sig) {
-    return NextResponse.json(
-      { error: "Missing Stripe signature" },
-      { status: 400 }
-    )
+export async function POST(req: Request) {
+  if (!webhookSecret) {
+    console.error("❌ STRIPE_WEBHOOK_SECRET not set")
+    return new NextResponse("Webhook secret not configured", { status: 500 })
   }
 
   let event: Stripe.Event
 
   try {
-    const stripe = getStripe()
+    const body = await req.text()
+    const signature = headers().get("stripe-signature")
+
+    if (!signature) {
+      console.error("❌ Missing stripe-signature header")
+      return new NextResponse("Missing signature", { status: 400 })
+    }
+
     event = stripe.webhooks.constructEvent(
       body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      signature,
+      webhookSecret
     )
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err)
-    return NextResponse.json(
-      { error: "Webhook verification failed" },
-      { status: 400 }
-    )
+  } catch (err: any) {
+    console.error("❌ Webhook signature verification failed:", err.message)
+    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 })
   }
 
+  // ✅ At this point Stripe is VERIFIED
+  console.log("✅ Stripe webhook received:", event.type)
+
+  // We will handle logic in Step 3
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session
 
-    const credits = Number(session.metadata?.credits)
-    const userId = session.client_reference_id
-
-    if (!credits || !userId) {
-      console.warn("Missing credits or userId in session metadata")
-      return NextResponse.json({ received: true })
-    }
-
-    // Add credits to user
-    await supabase.rpc("add_credits", {
-      p_user_id: userId,
-      p_amount: credits,
+    console.log("💰 Checkout completed:", {
+      sessionId: session.id,
+      customerEmail: session.customer_details?.email,
+      metadata: session.metadata,
     })
   }
 
