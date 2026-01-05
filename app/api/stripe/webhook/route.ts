@@ -12,21 +12,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-/* --------------------------------
-   Helper: add / overwrite credits
---------------------------------- */
+/* -------------------------------
+   Helpers
+-------------------------------- */
 async function setCredits(userId: string, credits: number) {
   await supabase
     .from("user_credits")
-    .upsert(
-      { user_id: userId, credits },
-      { onConflict: "user_id" }
-    )
+    .upsert({ user_id: userId, credits }, { onConflict: "user_id" })
 }
 
-/* --------------------------------
-   Helper: add credits (increment)
---------------------------------- */
 async function addCredits(userId: string, amount: number) {
   const { data } = await supabase
     .from("user_credits")
@@ -35,13 +29,12 @@ async function addCredits(userId: string, amount: number) {
     .single()
 
   const current = data?.credits ?? 0
-
   await setCredits(userId, current + amount)
 }
 
-/* --------------------------------
-   WEBHOOK HANDLER
---------------------------------- */
+/* -------------------------------
+   Webhook handler
+-------------------------------- */
 export async function POST(req: Request) {
   const body = await req.text()
   const signature = headers().get("stripe-signature")!
@@ -55,18 +48,18 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     )
   } catch (err: any) {
-    console.error("Webhook signature verification failed", err.message)
+    console.error("Webhook signature verification failed:", err.message)
     return new NextResponse("Invalid signature", { status: 400 })
   }
 
   try {
-    /* --------------------------------
-       CHECKOUT COMPLETE
-    --------------------------------- */
+    /* ---------------------------
+       Checkout completed
+    ---------------------------- */
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session
 
-      // Attach metadata to subscription (CRITICAL)
+      // Attach metadata to subscription
       if (session.mode === "subscription" && session.subscription) {
         await stripe.subscriptions.update(
           session.subscription as string,
@@ -88,23 +81,26 @@ export async function POST(req: Request) {
       }
     }
 
-    /* --------------------------------
-       SUBSCRIPTION RENEWAL
-    --------------------------------- */
+    /* ---------------------------
+       Subscription renewal
+    ---------------------------- */
     if (event.type === "invoice.payment_succeeded") {
-      const invoice = event.data.object as Stripe.Invoice
+      /**
+       * Stripe Clover typings DO NOT expose `subscription`
+       * even though it exists at runtime.
+       * We must manually narrow the type.
+       */
+      const invoice = event.data.object as Stripe.Invoice & {
+        subscription?: string | null
+      }
 
-      // SAFELY extract subscription ID (TS-safe)
-      const subscriptionId =
-        typeof invoice.subscription === "string"
-          ? invoice.subscription
-          : null
-
-      if (!subscriptionId) {
+      if (!invoice.subscription) {
         return NextResponse.json({ received: true })
       }
 
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+      const subscription = await stripe.subscriptions.retrieve(
+        invoice.subscription
+      )
 
       const userId = subscription.metadata.userId
       const plan = subscription.metadata.plan
@@ -125,7 +121,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true })
   } catch (err) {
-    console.error("Webhook handler error", err)
+    console.error("Webhook processing error:", err)
     return new NextResponse("Webhook error", { status: 500 })
   }
 }
