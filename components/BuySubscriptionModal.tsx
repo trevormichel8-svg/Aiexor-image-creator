@@ -2,21 +2,6 @@
 
 import { useState } from "react"
 
-const PLANS = [
-  {
-    id: "pro",
-    label: "Pro",
-    price: "$29.99 / month",
-    description: "200 credits / month",
-  },
-  {
-    id: "elite",
-    label: "Elite",
-    price: "$49.99 / month",
-    description: "500 credits / month",
-  },
-]
-
 export default function BuySubscriptionModal({
   open,
   onClose,
@@ -28,63 +13,67 @@ export default function BuySubscriptionModal({
 
   if (!open) return null
 
-  async function subscribe(plan: string) {
+  async function checkout(plan: "pro" | "elite") {
     setLoading(plan)
 
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }), // ✅ "pro" | "elite"
+        body: JSON.stringify({ plan }),
       })
 
-      const data = await res.json()
+      const text = await res.text()
 
-      if (data.url) {
+      alert(`Stripe response:\n\n${text}`)
+
+      let data: any = {}
+      try {
+        data = JSON.parse(text)
+      } catch {}
+
+      if (data?.url) {
         window.location.href = data.url
-      } else {
-        console.error("Checkout error:", data)
-        alert("Failed to start checkout")
-        setLoading(null)
+        return
       }
-    } catch (err) {
-      console.error(err)
-      alert("Unexpected error")
+
+      setLoading(null)
+    } catch (err: any) {
+      alert(`Network error:\n${err?.message || err}`)
       setLoading(null)
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
-      <div className="bg-[#0b1416] border border-teal-500/30 rounded-xl p-6 w-[90%] max-w-md shadow-[0_0_30px_rgba(45,212,191,0.35)]">
-        <h2 className="text-xl font-semibold text-teal-400 mb-4">
-          Choose a Plan
+      <div className="bg-[#0b1416] border border-teal-500/30 rounded-xl p-6 w-[90%] max-w-md">
+        <h2 className="text-xl text-teal-400 mb-4">
+          Choose a subscription
         </h2>
 
-        <div className="space-y-3">
-          {PLANS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => subscribe(p.id)}
-              disabled={loading === p.id}
-              className="w-full px-4 py-4 rounded-lg
-                         bg-teal-600/10 border border-teal-500/40
-                         hover:bg-teal-500/20 transition
-                         shadow-[0_0_12px_rgba(45,212,191,0.35)]
-                         text-left text-teal-300"
-            >
-              <div className="flex justify-between">
-                <span className="font-medium">{p.label}</span>
-                <span>{loading === p.id ? "Redirecting…" : p.price}</span>
-              </div>
-              <div className="text-sm opacity-70">{p.description}</div>
-            </button>
-          ))}
-        </div>
+        <button
+          onClick={() => checkout("pro")}
+          disabled={loading === "pro"}
+          className="w-full mb-3 px-4 py-3 rounded-lg
+                     bg-teal-500/20 border border-teal-500
+                     text-teal-300 shadow"
+        >
+          {loading === "pro" ? "Redirecting…" : "Pro — $29.99 / month"}
+        </button>
+
+        <button
+          onClick={() => checkout("elite")}
+          disabled={loading === "elite"}
+          className="w-full px-4 py-3 rounded-lg
+                     bg-teal-500/20 border border-teal-500
+                     text-teal-300 shadow"
+        >
+          {loading === "elite" ? "Redirecting…" : "Elite — $49.99 / month"}
+        </button>
 
         <button
           onClick={onClose}
-          className="mt-4 w-full text-sm text-teal-400 hover:text-teal-300"
+          className="mt-4 w-full text-sm text-teal-400"
         >
           Cancel
         </button>
