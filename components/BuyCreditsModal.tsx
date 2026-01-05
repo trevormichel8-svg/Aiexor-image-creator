@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { supabase } from "@/lib/supabaseClient"
 
 const PLANS = [
   { credits: 20, label: "20 Credits", price: "$6.99" },
@@ -23,23 +22,10 @@ export default function BuyCreditsModal({
   async function checkout(credits: number) {
     setLoading(credits)
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      alert("Please sign in first")
-      setLoading(null)
-      return
-    }
-
     const res = await fetch("/api/stripe/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: user.id,
-        credits,
-      }),
+      body: JSON.stringify({ credits }),
     })
 
     const data = await res.json()
