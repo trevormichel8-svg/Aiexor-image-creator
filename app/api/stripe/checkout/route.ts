@@ -1,21 +1,32 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getStripe, PRICES } from "@/lib/stripe"
+import { NextResponse } from "next/server"
+import Stripe from "stripe"
 
-export async function POST(req: NextRequest) {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  // DO NOT pin apiVersion — fixes your TS errors permanently
+})
+
+/**
+ * Canonical credit packs
+ * Frontend MUST match these numbers
+ */
+const CREDIT_PACKS: Record<number, { amount: number }> = {
+  20: { amount: 699 },
+  50: { amount: 1399 },
+  100: { amount: 2499 },
+}
+
+export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const { pack } = body
+    const { credits } = await req.json()
 
-    if (!pack || !PRICES[pack]) {
+    if (!credits || !CREDIT_PACKS[credits]) {
       return NextResponse.json(
         { error: "Invalid credit pack" },
         { status: 400 }
       )
     }
 
-    const stripe = getStripe()
-
-    const price = PRICES[pack]
+    const pack = CREDIT_PACKS[credits]
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -25,30 +36,22 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `${price.credits} Credits`,
-              description: "Aiexor AI Image Credits",
+              name: `${credits} AI Image Credits`,
             },
-            unit_amount: price.amount, // cents
+            unit_amount: pack.amount,
           },
           quantity: 1,
         },
       ],
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}?success=1`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}?cancel=1`,
       metadata: {
-        credits: String(price.credits),
+        credits: String(credits),
       },
-      success_url: "https://aiexor.com?payment=success",
-      cancel_url: "https://aiexor.com?payment=cancelled",
     })
 
-    if (!session.url) {
-      return NextResponse.json(
-        { error: "Failed to create checkout session" },
-        { status: 500 }
-      )
-    }
-
     return NextResponse.json({ url: session.url })
-  } catch (err) {
+  } catch (err: any) {
     console.error("Stripe checkout error:", err)
     return NextResponse.json(
       { error: "Checkout failed" },
