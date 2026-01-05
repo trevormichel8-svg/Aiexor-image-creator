@@ -9,39 +9,47 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
-    const { prompt, style, strength } = await req.json()
+    const body = await req.json()
+    const { prompt, style } = body
 
-    if (!prompt || typeof prompt !== "string") {
+    if (!prompt) {
       return NextResponse.json({ error: "Missing prompt" }, { status: 400 })
     }
 
-    // ✅ Supabase (SERVER-SIDE AUTH)
+    // ✅ CORRECT COOKIE ADAPTER (THIS IS THE FIX)
+    const cookieStore = cookies()
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies }
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
     )
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    const { data, error: authError } = await supabase.auth.getUser()
 
-    if (authError || !user) {
+    if (authError || !data.user) {
       return NextResponse.json(
-        { error: "Please sign in first" },
+        { error: "Not authenticated" },
         { status: 401 }
       )
     }
 
+    const userId = data.user.id
+
     // ✅ CHECK CREDITS
-    const { data: creditRow, error: creditError } = await supabase
+    const { data: creditRow } = await supabase
       .from("user_credits")
       .select("credits")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single()
 
-    if (creditError || !creditRow || creditRow.credits <= 0) {
+    if (!creditRow || creditRow.credits <= 0) {
       return NextResponse.json(
         { error: "Not enough credits" },
         { status: 402 }
@@ -49,37 +57,28 @@ export async function POST(req: Request) {
     }
 
     // ✅ GENERATE IMAGE
-    const fullPrompt = style
-      ? `${prompt}, style: ${style}`
-      : prompt
+    const fullPrompt = style ? `${prompt}, ${style}` : prompt
 
-    const result = await openai.images.generate({
+    const image = await openai.images.generate({
       model: "gpt-image-1",
       prompt: fullPrompt,
       size: "1024x1024",
     })
 
-    const imageUrl = result.data[0]?.url
+    const imageUrl = image.data[0]?.url
 
     if (!imageUrl) {
       return NextResponse.json(
-        { error: "Image generation failed" },
+        { error: "Generation failed" },
         { status: 500 }
       )
     }
 
-    // ✅ DEDUCT 1 CREDIT (ATOMIC UPDATE)
-    const { error: updateError } = await supabase
+    // ✅ DEDUCT CREDIT
+    await supabase
       .from("user_credits")
       .update({ credits: creditRow.credits - 1 })
-      .eq("user_id", user.id)
-
-    if (updateError) {
-      return NextResponse.json(
-        { error: "Failed to update credits" },
-        { status: 500 }
-      )
-    }
+      .eq("user_id", userId)
 
     return NextResponse.json({
       imageUrl,
@@ -88,7 +87,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("Generate error:", err)
     return NextResponse.json(
-      { error: "Unexpected server error" },
+      { error: "Server error" },
       { status: 500 }
     )
   }
