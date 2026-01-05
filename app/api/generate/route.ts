@@ -1,118 +1,94 @@
-import { NextRequest, NextResponse } from "next/server"
-import { imageRequestSchema } from "@/lib/validation"
-import { generateImage } from "@/lib/generateImage"
-import { rateLimit } from "@/lib/rateLimit"
-import { compilePrompt } from "@/lib/promptCompiler"
-import { consumeCredit, getCredits, ensureUser } from "@/lib/credits"
-import { supabaseServer } from "@/lib/supabaseServer"
+import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { createServerClient } from "@supabase/ssr"
+import OpenAI from "openai"
 
-export async function POST(req: NextRequest) {
-  /* --------------------------------------------------
-     1️⃣ Basic rate limiting (NO DB, NO AUTH)
-  -------------------------------------------------- */
-  const ip = req.headers.get("x-forwarded-for") ?? "unknown"
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+})
 
-  if (!rateLimit(ip)) {
-    return NextResponse.json(
-      { error: "Too many requests" },
-      { status: 429 }
-    )
-  }
-
-  /* --------------------------------------------------
-     2️⃣ Parse + validate request body
-  -------------------------------------------------- */
-  let body: unknown
-
+export async function POST(req: Request) {
   try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
+    const { prompt, style, strength } = await req.json()
+
+    if (!prompt || typeof prompt !== "string") {
+      return NextResponse.json({ error: "Missing prompt" }, { status: 400 })
+    }
+
+    // ✅ Supabase (SERVER-SIDE AUTH)
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies }
     )
-  }
 
-  const parsed = imageRequestSchema.safeParse(body)
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid input" },
-      { status: 400 }
-    )
-  }
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Please sign in first" },
+        { status: 401 }
+      )
+    }
 
-  const { prompt, style, strength } = parsed.data
+    // ✅ CHECK CREDITS
+    const { data: creditRow, error: creditError } = await supabase
+      .from("user_credits")
+      .select("credits")
+      .eq("user_id", user.id)
+      .single()
 
-  if (!prompt || prompt.trim().length < 3) {
-    return NextResponse.json(
-      { error: "Prompt too short" },
-      { status: 400 }
-    )
-  }
+    if (creditError || !creditRow || creditRow.credits <= 0) {
+      return NextResponse.json(
+        { error: "Not enough credits" },
+        { status: 402 }
+      )
+    }
 
-  /* --------------------------------------------------
-     3️⃣ Auth check (REQUIRED from here on)
-  -------------------------------------------------- */
-  const supabase = supabaseServer()
+    // ✅ GENERATE IMAGE
+    const fullPrompt = style
+      ? `${prompt}, style: ${style}`
+      : prompt
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
+    const result = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt: fullPrompt,
+      size: "1024x1024",
+    })
 
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: "Not authenticated" },
-      { status: 401 }
-    )
-  }
+    const imageUrl = result.data[0]?.url
 
-  const userId = user.id
+    if (!imageUrl) {
+      return NextResponse.json(
+        { error: "Image generation failed" },
+        { status: 500 }
+      )
+    }
 
-  /* --------------------------------------------------
-     4️⃣ Ensure user row exists
-  -------------------------------------------------- */
-  await ensureUser(userId)
+    // ✅ DEDUCT 1 CREDIT (ATOMIC UPDATE)
+    const { error: updateError } = await supabase
+      .from("user_credits")
+      .update({ credits: creditRow.credits - 1 })
+      .eq("user_id", user.id)
 
-  /* --------------------------------------------------
-     5️⃣ Consume credit (atomic logic)
-  -------------------------------------------------- */
-  const hasCredit = await consumeCredit(userId)
-
-  if (!hasCredit) {
-    const credits = await getCredits(userId)
-    return NextResponse.json(
-      { error: "Out of credits", credits },
-      { status: 402 }
-    )
-  }
-
-  /* --------------------------------------------------
-     6️⃣ Generate image
-  -------------------------------------------------- */
-  try {
-    const compiledPrompt = compilePrompt(prompt, style, strength)
-    const imageUrl = await generateImage(compiledPrompt)
-
-    const credits = await getCredits(userId)
+    if (updateError) {
+      return NextResponse.json(
+        { error: "Failed to update credits" },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       imageUrl,
-      credits,
+      remainingCredits: creditRow.credits - 1,
     })
   } catch (err) {
-    // If generation fails, refund the credit (optional safety)
-    // You can remove this if you don’t want refunds
-    // await addCredits(userId, 1)
-
+    console.error("Generate error:", err)
     return NextResponse.json(
-      {
-        error:
-          process.env.NODE_ENV === "development"
-            ? String(err)
-            : "Generation failed",
-      },
+      { error: "Unexpected server error" },
       { status: 500 }
     )
   }
