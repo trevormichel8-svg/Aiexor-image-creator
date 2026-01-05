@@ -1,63 +1,42 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useCredits } from "@/context/CreditsContext"
+import { useState } from "react"
+import AuthButton from "@/components/AuthButton"
+import BuyCreditsModal from "@/components/BuyCreditsModal"
 
 export default function Page() {
-  const { credits, refreshCredits } = useCredits()
-  const [prompt, setPrompt] = useState("")
-  const [loading, setLoading] = useState(false)
-
-  // ✅ Stripe success handler
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get("success")) {
-      refreshCredits()
-      window.history.replaceState({}, "", "/")
-    }
-  }, [refreshCredits])
-
-  async function generateImage() {
-    setLoading(true)
-    await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
-    })
-    setLoading(false)
-  }
+  const [buyOpen, setBuyOpen] = useState(false)
 
   return (
-    <>
-      {/* Header */}
-      <header className="flex justify-between items-center px-6 py-4 border-b border-zinc-800">
-        <div className="font-semibold">Create Your First Image</div>
-        <div className="text-sm text-zinc-400">
-          Credits: <span className="text-teal-400">{credits}</span>
-        </div>
-      </header>
+    <main className="min-h-screen bg-[#0b1416] text-white relative">
 
-      {/* Canvas */}
-      <main className="flex-1"></main>
-
-      {/* Bottom Prompt Bar */}
-      <div className="fixed bottom-0 left-14 right-0 p-4 bg-zinc-950 border-t border-zinc-800">
-        <div className="flex gap-2 max-w-3xl mx-auto">
-          <input
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe your image..."
-            className="flex-1 rounded-full px-4 py-3 bg-zinc-900 border border-zinc-700 outline-none"
-          />
-          <button
-            onClick={generateImage}
-            disabled={loading || !prompt}
-            className="px-6 rounded-full bg-teal-600 hover:bg-teal-500 disabled:opacity-50"
-          >
-            {loading ? "..." : "Generate"}
-          </button>
-        </div>
+      {/* 🔐 SIGN IN BUTTON (TOP RIGHT – ALWAYS VISIBLE) */}
+      <div className="fixed top-4 right-4 z-50">
+        <AuthButton />
       </div>
-    </>
+
+      {/* 💳 BUY CREDITS BUTTON (BOTTOM RIGHT) */}
+      <button
+        onClick={() => setBuyOpen(true)}
+        className="fixed bottom-6 right-6 z-40
+                   px-5 py-3 rounded-full
+                   bg-teal-500 text-black font-semibold
+                   shadow-[0_0_20px_rgba(45,212,191,0.6)]
+                   hover:bg-teal-400 transition"
+      >
+        Buy Credits
+      </button>
+
+      {/* 🧾 BUY CREDITS MODAL */}
+      <BuyCreditsModal
+        open={buyOpen}
+        onClose={() => setBuyOpen(false)}
+      />
+
+      {/* 🖼️ PLACEHOLDER CANVAS */}
+      <div className="flex items-center justify-center h-screen opacity-60">
+        <h1 className="text-xl">Image Generator Canvas</h1>
+      </div>
+    </main>
   )
 }
