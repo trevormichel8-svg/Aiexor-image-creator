@@ -1,142 +1,74 @@
 "use client"
 
-import { useState } from "react"
-import Sidebar from "@/components/Sidebar"
-import PromptBar from "@/components/PromptBar"
-import ImageCanvas from "@/components/ImageCanvas"
-import ImageLightbox from "@/components/ImageLightbox"
-import BuyCreditsModal from "@/components/BuyCreditsModal"
-import AuthButton from "@/components/AuthButton"
-import artStyles from "@/lib/artStyles"
+import { useEffect, useState } from "react"
+import { useCredits } from "@/context/CreditsContext"
 
 export default function Page() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [imageSrc, setImageSrc] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [buyOpen, setBuyOpen] = useState(false)
-
+  const { credits, refreshCredits } = useCredits()
   const [prompt, setPrompt] = useState("")
-  const [artStyle, setArtStyle] = useState<string>(artStyles[0] ?? "")
-  const [strength, setStrength] = useState<number>(70)
+  const [loading, setLoading] = useState(false)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
 
-  async function handleGenerate() {
-    if (!prompt.trim() || loading) return
+  // ✅ Run ONCE after Stripe redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
 
+    if (params.get("success")) {
+      refreshCredits()
+
+      // clean URL so it doesn’t re-run on refresh
+      window.history.replaceState({}, "", "/")
+    }
+  }, [refreshCredits])
+
+  async function generateImage() {
     setLoading(true)
 
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: prompt.trim(),
-          style: artStyle,
-          strength,
-        }),
-      })
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    })
 
-      const data = await res.json()
+    const data = await res.json()
 
-      if (!res.ok) {
-        alert(data.error ?? "Generation failed")
-        return
-      }
-
-      setImageSrc(data.imageUrl)
-      setLightboxOpen(false)
-    } catch (err) {
-      console.error(err)
-      alert("Unexpected error")
-    } finally {
-      setLoading(false)
+    if (data.image) {
+      setImageUrl(data.image)
     }
+
+    setLoading(false)
   }
 
   return (
-    <main className="canvas bg-[#0b1416] text-white min-h-screen">
-      {/* Auth button */}
-      <div style={{ position: "fixed", top: 16, right: 16, zIndex: 60 }}>
-        <AuthButton />
+    <main className="min-h-screen bg-black text-white flex flex-col items-center p-6">
+      <h1 className="text-2xl font-bold mb-4">Create Your First Image</h1>
+
+      <div className="mb-4 text-sm text-gray-300">
+        Credits: <span className="font-semibold">{credits}</span>
       </div>
 
-      {/* Buy credits button */}
+      <input
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder="Describe your image..."
+        className="w-full max-w-xl p-3 rounded bg-zinc-900 border border-zinc-700 mb-4"
+      />
+
       <button
-        onClick={() => setBuyOpen(true)}
-        className="fixed bottom-6 right-6 z-40
-                   px-4 py-2 rounded-full
-                   bg-teal-600 text-black font-medium
-                   shadow-[0_0_18px_rgba(45,212,191,0.6)]
-                   hover:bg-teal-500 transition"
+        onClick={generateImage}
+        disabled={loading || !prompt}
+        className="px-6 py-2 rounded bg-teal-600 hover:bg-teal-500 disabled:opacity-50"
       >
-        Buy Credits
+        {loading ? "Generating..." : "Generate"}
       </button>
 
-      {/* Sidebar toggle */}
-      {!sidebarOpen && (
-        <button
-          className="sidebar-button fixed top-6 left-6
-                     text-teal-400 text-xl
-                     shadow-[0_0_12px_rgba(45,212,191,0.5)]"
-          onClick={() => setSidebarOpen(true)}
-        >
-          ☰
-        </button>
-      )}
-
-      {/* Sidebar */}
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        artStyle={artStyle}
-        setArtStyle={setArtStyle}
-        strength={strength}
-        setStrength={setStrength}
-      />
-
-      {/* Image output */}
-      <div className="flex justify-center items-center mt-20 px-4">
-        {imageSrc ? (
-          <div
-            className="image-wrapper cursor-zoom-in"
-            onClick={() => setLightboxOpen(true)}
-          >
-            <ImageCanvas src={imageSrc} />
-          </div>
-        ) : (
-          <div className="empty-state text-center opacity-70">
-            <h2 className="text-xl">Create Your First Image</h2>
-          </div>
-        )}
-      </div>
-
-      {/* Loading */}
-      {loading && (
-        <div className="p-6 text-center text-teal-400">
-          Generating image…
-        </div>
-      )}
-
-      {/* Prompt bar */}
-      <PromptBar
-        onGenerate={handleGenerate}
-        prompt={prompt}
-        setPrompt={setPrompt}
-      />
-
-      {/* Lightbox */}
-      {lightboxOpen && imageSrc && (
-        <ImageLightbox
-          src={imageSrc}
-          onClose={() => setLightboxOpen(false)}
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt="Generated"
+          className="mt-6 rounded max-w-full"
         />
       )}
-
-      {/* Buy credits modal */}
-      <BuyCreditsModal
-        open={buyOpen}
-        onClose={() => setBuyOpen(false)}
-      />
     </main>
   )
 }
