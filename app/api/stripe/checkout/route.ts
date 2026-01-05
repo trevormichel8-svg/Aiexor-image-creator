@@ -1,89 +1,67 @@
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
-import { cookies } from "next/headers"
-import { createServerClient } from "@supabase/ssr"
+import { createClient } from "@supabase/supabase-js"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   
 })
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
 export async function POST(req: Request) {
   try {
-    const { credits } = await req.json()
+    const { plan } = await req.json()
 
-    if (!credits) {
-      return NextResponse.json(
-        { error: "Missing credits" },
-        { status: 400 }
-      )
+    if (!plan || !["pro", "elite"].includes(plan)) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          get(name) {
-            return cookies().get(name)?.value
-          },
-        },
-      }
-    )
+    const authHeader = req.headers.get("authorization")
+    if (!authHeader) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+    }
+
+    const token = authHeader.replace("Bearer ", "")
 
     const {
       data: { user },
-    } = await supabase.auth.getUser()
+      error,
+    } = await supabase.auth.getUser(token)
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 401 }
-      )
+    if (error || !user) {
+      return NextResponse.json({ error: "Invalid user" }, { status: 401 })
     }
 
-    const priceMap: Record<number, number> = {
-      20: 699,
-      50: 1399,
-      100: 2499,
-    }
-
-    const amount = priceMap[credits]
-
-    if (!amount) {
-      return NextResponse.json(
-        { error: "Invalid credit pack" },
-        { status: 400 }
-      )
+    const PRICE_IDS = {
+      pro: process.env.STRIPE_PRO_PRICE_ID!,
+      elite: process.env.STRIPE_ELITE_PRICE_ID!,
     }
 
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+      mode: "subscription",
       payment_method_types: ["card"],
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: `${credits} Credits`,
-            },
-            unit_amount: amount,
-          },
+          price: PRICE_IDS[plan as "pro" | "elite"],
           quantity: 1,
         },
       ],
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?canceled=true`,
       metadata: {
         userId: user.id,
-        credits: credits.toString(),
+        plan,
       },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?cancelled=true`,
     })
 
     return NextResponse.json({ url: session.url })
   } catch (err) {
     console.error("Checkout error:", err)
     return NextResponse.json(
-      { error: "Stripe checkout failed" },
+      { error: "Failed to start checkout" },
       { status: 500 }
     )
   }
