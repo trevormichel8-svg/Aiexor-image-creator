@@ -43,7 +43,7 @@ export default function Page() {
   }
 
   async function subscribe(plan: "pro" | "elite") {
-    const res = await fetch("/api/stripe/subscribe", {
+    const res = await fetch("/api/stripe/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ plan }),
