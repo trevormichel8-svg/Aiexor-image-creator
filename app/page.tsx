@@ -42,11 +42,15 @@ export default function Page() {
     location.reload()
   }
 
+  // ✅ FIXED: pass userId to backend
   async function subscribe(plan: "pro" | "elite") {
-    const res = await fetch("/api/stripe/checkout", {
+    const res = await fetch("/api/stripe/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan }),
+      body: JSON.stringify({
+        plan,
+        userId: user.id,
+      }),
     })
 
     const data = await res.json()

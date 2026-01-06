@@ -2,78 +2,105 @@
 
 import { useState } from "react"
 
-export default function BuySubscriptionModal({
-  open,
-  onClose,
-}: {
+type Plan = "pro" | "elite"
+
+interface Props {
   open: boolean
   onClose: () => void
-}) {
-  const [loading, setLoading] = useState<string | null>(null)
+}
+
+export default function BuySubscriptionModal({ open, onClose }: Props) {
+  const [loading, setLoading] = useState<Plan | null>(null)
 
   if (!open) return null
 
-  async function checkout(plan: "pro" | "elite") {
-    setLoading(plan)
-
+  async function startCheckout(plan: Plan) {
     try {
+      setLoading(plan)
+
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ plan }),
       })
 
-      const text = await res.text()
+      const data = await res.json()
 
-      alert(`Stripe response:\n\n${text}`)
-
-      let data: any = {}
-      try {
-        data = JSON.parse(text)
-      } catch {}
-
-      if (data?.url) {
-        window.location.href = data.url
+      if (!res.ok) {
+        alert(data.error || "Failed to start checkout")
+        setLoading(null)
         return
       }
 
-      setLoading(null)
-    } catch (err: any) {
-      alert(`Network error:\n${err?.message || err}`)
+      if (!data.url) {
+        alert("Stripe did not return a checkout URL")
+        setLoading(null)
+        return
+      }
+
+      // 🔁 Redirect to Stripe
+      window.location.href = data.url
+    } catch (err) {
+      console.error("Checkout error:", err)
+      alert("Checkout failed")
       setLoading(null)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
-      <div className="bg-[#0b1416] border border-teal-500/30 rounded-xl p-6 w-[90%] max-w-md">
-        <h2 className="text-xl text-teal-400 mb-4">
-          Choose a subscription
-        </h2>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          background: "#111",
+          padding: 20,
+          borderRadius: 8,
+          width: "90%",
+          maxWidth: 400,
+          color: "#fff",
+        }}
+      >
+        <h2>Choose a subscription</h2>
 
         <button
-          onClick={() => checkout("pro")}
-          disabled={loading === "pro"}
-          className="w-full mb-3 px-4 py-3 rounded-lg
-                     bg-teal-500/20 border border-teal-500
-                     text-teal-300 shadow"
+          onClick={() => startCheckout("pro")}
+          disabled={loading !== null}
+          style={{ width: "100%", marginBottom: 12 }}
         >
-          {loading === "pro" ? "Redirecting…" : "Pro — $29.99 / month"}
+          {loading === "pro"
+            ? "Redirecting…"
+            : "Pro — $29.99 / month (200 credits)"}
         </button>
 
         <button
-          onClick={() => checkout("elite")}
-          disabled={loading === "elite"}
-          className="w-full px-4 py-3 rounded-lg
-                     bg-teal-500/20 border border-teal-500
-                     text-teal-300 shadow"
+          onClick={() => startCheckout("elite")}
+          disabled={loading !== null}
+          style={{ width: "100%", marginBottom: 12 }}
         >
-          {loading === "elite" ? "Redirecting…" : "Elite — $49.99 / month"}
+          {loading === "elite"
+            ? "Redirecting…"
+            : "Elite — $49.99 / month (500 credits)"}
         </button>
 
         <button
           onClick={onClose}
-          className="mt-4 w-full text-sm text-teal-400"
+          style={{
+            width: "100%",
+            background: "transparent",
+            color: "#aaa",
+            marginTop: 8,
+          }}
         >
           Cancel
         </button>
