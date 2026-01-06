@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
-import { supabaseServerAuth } from "@/lib/supabaseServerAuth"
+import { createClient } from "@supabase/supabase-js"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export async function POST(req: Request) {
   try {
@@ -12,24 +17,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing plan" }, { status: 400 })
     }
 
-    // ✅ AUTH: read signed-in user from cookies
-    const supabase = supabaseServerAuth()
+    // 🔐 Get authenticated user
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser()
 
     if (error || !user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+      return NextResponse.json(
+        { error: "Not authenticated" },
+        { status: 401 }
+      )
     }
 
-    // 💰 Pricing (cents)
-    const prices: Record<string, { amount: number; name: string }> = {
+    // 💳 Subscription pricing
+    const plans: Record<string, { amount: number; name: string }> = {
       pro: { amount: 2999, name: "Pro Plan" },
       elite: { amount: 4999, name: "Elite Plan" },
     }
 
-    const selected = prices[plan]
+    const selected = plans[plan]
     if (!selected) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
@@ -43,10 +50,8 @@ export async function POST(req: Request) {
           price_data: {
             currency: "usd",
             unit_amount: selected.amount,
+            product_data: { name: selected.name },
             recurring: { interval: "month" },
-            product_data: {
-              name: selected.name,
-            },
           },
           quantity: 1,
         },
