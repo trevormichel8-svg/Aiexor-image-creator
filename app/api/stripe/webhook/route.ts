@@ -94,3 +94,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Webhook failed" }, { status: 500 })
   }
 }
+
+export {}
