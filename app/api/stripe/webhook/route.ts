@@ -53,7 +53,7 @@ export async function POST(req: Request) {
    * 2️⃣ Determine credits from Stripe PRICE ID
    * Replace these with YOUR real Stripe price IDs
    */
-  const priceId = invoice.lines.data[0]?.price?.id;
+  const priceId =(invoice.lines.data[0]as any)?.price?.id;
 
   const CREDITS_BY_PRICE: Record<string, number> = {
     "price_PRO_ID": price_1SmO6tRYoDtZ3J2YUjVeOB6O,
