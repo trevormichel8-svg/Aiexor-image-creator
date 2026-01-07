@@ -56,8 +56,8 @@ export async function POST(req: Request) {
   const priceId =(invoice.lines.data[0]as any)?.price?.id;
 
   const CREDITS_BY_PRICE: Record<string, number> = {
-    "price_PRO_ID": price_1SmO6tRYoDtZ3J2YUjVeOB6O,
-    "price_ELITE_ID": price_1SmO6ARYoDtZ3J2YqTQWIznT,
+    "price_1SmO6tRYoDtZ3J2YUjVeOB6O", 300
+    "price_1SmO6ARYoDtZ3J2YqTQWIznT", 600
   };
 
   const creditsToAdd = CREDITS_BY_PRICE[priceId!];
