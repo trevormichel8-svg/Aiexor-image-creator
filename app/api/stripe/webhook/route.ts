@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 
   const creditsToAdd = CREDITS_BY_PRICE[priceId!];
   if (!creditsToAdd) {
- O
+ 
    console.error("❌ Unknown Stripe price ID:", priceId);
     return new Response("Unknown price", { status: 400 });
   }
