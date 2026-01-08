@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-11-17.clover",
+})
 
 export async function POST(req: Request) {
   try {
@@ -21,30 +23,40 @@ export async function POST(req: Request) {
 
     const selected = plans[plan]
     if (!selected) {
-      return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Invalid plan" },
+        { status: 400 }
+      )
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
+
       line_items: [
         {
           price_data: {
             currency: "usd",
             unit_amount: selected.amount,
-            product_data: { name: selected.name },
+            product_data: {
+              name: selected.name,
+            },
             recurring: { interval: "month" },
           },
           quantity: 1,
         },
       ],
+
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}?cancelled=true`,
 
-      // ✅ THIS IS THE ONLY REQUIRED FIX
-      metadata: {
-        user_id: userId, // must be snake_case
-        plan,
+      // ✅ THIS IS THE CRITICAL FIX
+      // Stripe copies subscription metadata → invoice metadata
+      subscription_data: {
+        metadata: {
+          user_id: userId, // MUST be snake_case
+          plan,
+        },
       },
     })
 
