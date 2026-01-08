@@ -24,48 +24,48 @@ export async function POST(req: Request) {
     return new Response("Webhook Error", { status: 400 })
   }
 
+  // Only process successful subscription payments
   if (event.type !== "invoice.paid") {
     return new Response("Ignored event", { status: 200 })
   }
 
-  // ⬇️ Cast ONCE so TypeScript stops lying
-  const invoice = event.data.object as any
+  const invoice = event.data.object as Stripe.Invoice
 
   /**
    * STEP 1 — Resolve user_id
+   * Stripe subscription invoices store metadata on:
+   * - invoice.lines.data[0].metadata
+   * - invoice.parent.subscription_details.metadata
    */
-  let userId = invoice.metadata?.user_id
 
-  if (!userId && invoice.subscription) {
-    try {
-      const subscription = await stripe.subscriptions.retrieve(
-        invoice.subscription as string
-      )
-      userId = subscription.metadata?.user_id
-    } catch (err) {
-      console.error("❌ Failed to retrieve subscription:", err)
-      return new Response("Subscription lookup failed", { status: 500 })
-    }
+  let userId =
+    invoice.lines?.data?.[0]?.metadata?.user_id ?? null
+
+  if (!userId) {
+    userId =
+      (invoice.parent as any)?.subscription_details?.metadata?.user_id ??
+      null
   }
 
   if (!userId) {
-    console.error("❌ Missing user_id on invoice and subscription")
+    console.error("❌ No user_id found on invoice", invoice.id)
     return new Response("Missing user_id", { status: 400 })
   }
 
   /**
    * STEP 2 — Get Stripe price ID
    */
-  const lineItem = invoice.lines?.data?.[0]
-  const priceId: string | undefined = lineItem?.price?.id
+  const priceId =
+    invoice.lines?.data?.[0]?.pricing?.price_details?.price
 
   if (!priceId) {
-    console.error("❌ Missing price ID on invoice")
+    console.error("❌ Missing price ID on invoice", invoice.id)
     return new Response("Missing price ID", { status: 400 })
   }
 
   /**
    * STEP 3 — Map price → credits
+   * Must match your Stripe prices
    */
   const CREDITS_BY_PRICE: Record<string, number> = {
     "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200, // Pro
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
   }
 
   /**
-   * STEP 4 — Increment credits (idempotent)
+   * STEP 4 — Increment credits in Supabase (idempotent)
    */
   const supabaseRes = await fetch(
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/increment_user_credits`,
