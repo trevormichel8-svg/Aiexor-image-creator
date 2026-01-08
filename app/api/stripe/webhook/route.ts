@@ -8,11 +8,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
 export async function POST(req: Request) {
+  console.log("🔥 WEBHOOK HIT")
+
   const body = await req.text()
   const sig = headers().get("stripe-signature")
 
   if (!sig) {
-    return new Response("Missing Stripe signature", { status: 400 })
+    console.error("❌ Missing stripe-signature header")
+    return new Response("Missing signature", { status: 400 })
   }
 
   let event: Stripe.Event
@@ -20,61 +23,52 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
   } catch (err) {
-    console.error("❌ Webhook signature verification failed:", err)
+    console.error("❌ Signature verification failed", err)
     return new Response("Webhook Error", { status: 400 })
   }
 
+  console.log("📦 Event type:", event.type)
+
   if (event.type !== "invoice.paid") {
-    return new Response("Ignored event", { status: 200 })
+    console.log("⏭️ Ignored event")
+    return new Response("Ignored", { status: 200 })
   }
 
   const invoice = event.data.object as Stripe.Invoice
 
-  /**
-   * STEP 1 — Resolve user_id
-   */
-  let userId =
+  const userId =
     invoice.lines?.data?.[0]?.metadata?.user_id ??
-    (invoice.parent as any)?.subscription_details?.metadata?.user_id ??
-    null
+    (invoice.parent as any)?.subscription_details?.metadata?.user_id
+
+  console.log("👤 userId:", userId)
 
   if (!userId) {
-    console.error("❌ No user_id found on invoice", invoice.id)
-    return new Response("Missing user_id", { status: 400 })
+    console.error("❌ userId missing")
+    return new Response("Missing userId", { status: 400 })
   }
 
-  /**
-   * STEP 2 — Get Stripe price ID (FORCE STRING)
-   */
-  const rawPrice =
-    invoice.lines?.data?.[0]?.pricing?.price_details?.price
+  const priceId =
+    invoice.lines?.data?.[0]?.pricing?.price_details?.price as string
 
-  const priceId = rawPrice as string
+  console.log("💰 priceId:", priceId)
 
-  if (!priceId) {
-    console.error("❌ Missing price ID on invoice", invoice.id)
-    return new Response("Missing price ID", { status: 400 })
-  }
-
-  /**
-   * STEP 3 — Map price → credits
-   */
   const CREDITS_BY_PRICE: Record<string, number> = {
-    "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200, // Pro
-    "price_1SmO6ARYoDtZ3J2YqTQWIznT": 500, // Elite
+    "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200,
+    "price_1SmO6ARYoDtZ3J2YqTQWIznT": 500,
   }
 
   const creditsToAdd = CREDITS_BY_PRICE[priceId]
 
+  console.log("➕ creditsToAdd:", creditsToAdd)
+
   if (!creditsToAdd) {
-    console.error("❌ Unknown Stripe price ID:", priceId)
+    console.error("❌ Unknown price")
     return new Response("Unknown price", { status: 400 })
   }
 
-  /**
-   * STEP 4 — Increment credits in Supabase
-   */
-  const supabaseRes = await fetch(
+  console.log("🚀 Calling Supabase RPC")
+
+  const res = await fetch(
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/increment_user_credits`,
     {
       method: "POST",
@@ -92,11 +86,14 @@ export async function POST(req: Request) {
     }
   )
 
-  if (!supabaseRes.ok) {
-    const text = await supabaseRes.text()
-    console.error("❌ Supabase RPC failed:", text)
-    return new Response("Credit increment failed", { status: 500 })
+  const text = await res.text()
+  console.log("📨 Supabase response:", res.status, text)
+
+  if (!res.ok) {
+    console.error("❌ Supabase failed")
+    return new Response("Supabase error", { status: 500 })
   }
 
-  return new Response("Credits added", { status: 200 })
+  console.log("✅ CREDITS APPLIED")
+  return new Response("OK", { status: 200 })
 }
