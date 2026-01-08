@@ -44,7 +44,7 @@ export default function Page() {
 
   // ✅ FIXED: pass userId to backend
   async function subscribe(plan: "pro" | "elite") {
-    const res = await fetch("/api/stripe/subscribe", {
+    const res = await fetch("/api/stripe/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -104,14 +104,14 @@ export default function Page() {
               onClick={() => subscribe("pro")}
               className="border border-teal-500 p-2 rounded"
             >
-              Pro — $29.99 / month (200 credits)
+              Pro — $29.99 / month (400 credits)
             </button>
 
             <button
               onClick={() => subscribe("elite")}
               className="border border-teal-500 p-2 rounded"
             >
-              Elite — $49.99 / month (500 credits)
+              Elite — $49.99 / month (800 credits)
             </button>
           </div>
         </>
