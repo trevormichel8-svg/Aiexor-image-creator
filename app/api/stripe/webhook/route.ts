@@ -4,13 +4,10 @@ import { headers } from "next/headers"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: Request) {
-  console.log("🔥 WEBHOOK HIT")
-
   const body = await req.text()
   const sig = headers().get("stripe-signature")
 
   if (!sig) {
-    console.error("❌ Missing stripe-signature")
     return new Response("Missing signature", { status: 400 })
   }
 
@@ -22,77 +19,77 @@ export async function POST(req: Request) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     )
-  } catch (err) {
-    console.error("❌ Signature verification failed", err)
+  } catch {
     return new Response("Webhook error", { status: 400 })
   }
 
-  console.log("📦 Event type:", event.type)
-
-  /**
-   * ================================
-   * 1️⃣ INITIAL PURCHASE (checkout)
-   * ================================
-   */
+  /* ===============================
+     1️⃣ SUBSCRIPTION START
+     =============================== */
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session
-
     const userId = session.metadata?.user_id
-    const priceId = session.metadata?.price_id
 
-    if (!userId || !priceId) {
-      console.error("❌ Missing metadata on checkout session")
-      return new Response("Missing metadata", { status: 400 })
+    if (userId) {
+      await setSubscriptionActive(userId, true)
     }
 
-    const CREDITS_BY_PRICE: Record<string, number> = {
-      "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200, // Pro
-      "price_1SmO6ARYoDtZ3J2YqTQWIznT": 800, // Elite ✅
-    }
-
-    const creditsToAdd = CREDITS_BY_PRICE[priceId]
-
-    if (!creditsToAdd) {
-      console.error("❌ Unknown price:", priceId)
-      return new Response("Unknown price", { status: 400 })
-    }
-
-    await addCredits({
-      userId,
-      amount: creditsToAdd,
-      reason: "subscription_started",
-      eventId: event.id,
-    })
-
-    return new Response("Initial credits applied", { status: 200 })
+    return new Response("OK", { status: 200 })
   }
 
-  /**
-   * ==================================
-   * 2️⃣ MONTHLY RENEWAL (invoice.paid)
-   * ==================================
-   */
+  /* ===============================
+     2️⃣ SUBSCRIPTION CANCELED
+     =============================== */
+  if (
+    event.type === "customer.subscription.deleted" ||
+    (event.type === "customer.subscription.updated" &&
+      (event.data.object as Stripe.Subscription).status === "canceled")
+  ) {
+    const sub = event.data.object as Stripe.Subscription
+    const userId = sub.metadata?.user_id
+
+    if (userId) {
+      await setSubscriptionActive(userId, false)
+    }
+
+    return new Response("OK", { status: 200 })
+  }
+
+  /* ===============================
+     3️⃣ MONTHLY RENEWAL
+     =============================== */
   if (event.type === "invoice.paid") {
     const invoice = event.data.object as Stripe.Invoice
 
-    // 🔒 Only monthly renewals (not first invoice)
     if (invoice.billing_reason !== "subscription_cycle") {
-      console.log("⏭️ Ignoring non-renewal invoice")
       return new Response("Ignored", { status: 200 })
     }
 
     const line = invoice.lines.data[0]
-
     const userId =
       line.metadata?.user_id ??
       (invoice.parent as any)?.subscription_details?.metadata?.user_id
 
-    const priceId = line.pricing?.price_details?.price as string
-
-    if (!userId || !priceId) {
-      console.error("❌ Missing renewal metadata")
-      return new Response("Missing data", { status: 400 })
+    if (!userId) {
+      return new Response("Missing user", { status: 400 })
     }
+
+    // 🔒 Check subscription_active
+    const { data } = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_credits?user_id=eq.${userId}&select=subscription_active`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        },
+      }
+    ).then(r => r.json())
+
+    if (!data?.[0]?.subscription_active) {
+      return new Response("Subscription inactive", { status: 200 })
+    }
+
+    const priceId = line.pricing?.price_details?.price as string
 
     const CREDITS_BY_PRICE: Record<string, number> = {
       "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200,
@@ -100,43 +97,44 @@ export async function POST(req: Request) {
     }
 
     const creditsToAdd = CREDITS_BY_PRICE[priceId]
-
     if (!creditsToAdd) {
-      console.error("❌ Unknown renewal price:", priceId)
       return new Response("Unknown price", { status: 400 })
     }
 
-    await addCredits({
-      userId,
-      amount: creditsToAdd,
-      reason: "subscription_renewal",
-      eventId: event.id,
-    })
+    await addCredits(userId, creditsToAdd, event.id, "subscription_renewal")
 
-    return new Response("Renewal credits applied", { status: 200 })
+    return new Response("Credits added", { status: 200 })
   }
 
-  console.log("⏭️ Ignored event")
   return new Response("Ignored", { status: 200 })
 }
 
-/**
- * ==================================
- * 🔧 SHARED CREDIT HELPER
- * ==================================
- */
-async function addCredits({
-  userId,
-  amount,
-  reason,
-  eventId,
-}: {
-  userId: string
-  amount: number
+/* ===============================
+   Helpers
+   =============================== */
+
+async function setSubscriptionActive(userId: string, active: boolean) {
+  await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_credits?user_id=eq.${userId}`,
+    {
+      method: "PATCH",
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ subscription_active: active }),
+    }
+  )
+}
+
+async function addCredits(
+  userId: string,
+  amount: number,
+  eventId: string,
   reason: string
-  eventId: string
-}) {
-  const res = await fetch(
+) {
+  await fetch(
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/increment_user_credits`,
     {
       method: "POST",
@@ -153,11 +151,4 @@ async function addCredits({
       }),
     }
   )
-
-  const text = await res.text()
-  console.log("📨 Supabase:", res.status, text)
-
-  if (!res.ok) {
-    throw new Error("Failed to apply credits")
-  }
 }
