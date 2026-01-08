@@ -51,8 +51,8 @@ export async function POST(req: Request) {
     console.log("💰 priceId:", priceId)
 
     const CREDITS_BY_PRICE: Record<string, number> = {
-      "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200, // Pro
-      "price_1SmO6ARYoDtZ3J2YqTQWIznT": 500, // Elite
+      "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 400, // Pro
+      "price_1SmO6ARYoDtZ3J2YqTQWIznT": 800, // Elite
     }
 
     const creditsToAdd = CREDITS_BY_PRICE[priceId]
