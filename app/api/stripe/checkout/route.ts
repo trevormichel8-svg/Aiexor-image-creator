@@ -40,8 +40,10 @@ export async function POST(req: Request) {
       ],
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}?cancelled=true`,
+
+      // ✅ THIS IS THE ONLY REQUIRED FIX
       metadata: {
-        userId,
+        user_id: userId, // must be snake_case
         plan,
       },
     })
