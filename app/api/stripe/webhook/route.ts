@@ -34,15 +34,21 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session
 
     const userId = session.metadata?.user_id
-    const priceId = session.metadata?.price_id
+
+    if (!userId || !session.subscription) {
+      console.error("❌ Missing user_id or subscription")
+      return new Response("Missing data", { status: 400 })
+    }
+
+    // 🔑 Retrieve subscription to get price ID
+    const subscription = await stripe.subscriptions.retrieve(
+      session.subscription as string
+    )
+
+    const priceId = subscription.items.data[0].price.id
 
     console.log("👤 userId:", userId)
     console.log("💰 priceId:", priceId)
-
-    if (!userId || !priceId) {
-      console.error("❌ Missing metadata on session")
-      return new Response("Missing metadata", { status: 400 })
-    }
 
     const CREDITS_BY_PRICE: Record<string, number> = {
       "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200, // Pro
@@ -82,9 +88,9 @@ export async function POST(req: Request) {
     return new Response("Credits applied", { status: 200 })
   }
 
-  // Optional: keep invoice.paid for safety
+  // Optional safety
   if (event.type === "invoice.paid") {
-    console.log("ℹ️ invoice.paid received (no action)")
+    console.log("ℹ️ invoice.paid received (ignored)")
     return new Response("OK", { status: 200 })
   }
 
