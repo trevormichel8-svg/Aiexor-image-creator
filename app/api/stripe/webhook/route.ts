@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const sig = headers().get("stripe-signature")
 
   if (!sig) {
-    console.error("❌ Missing stripe-signature header")
+    console.error("❌ Missing stripe-signature")
     return new Response("Missing signature", { status: 400 })
   }
 
@@ -24,76 +24,70 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
   } catch (err) {
     console.error("❌ Signature verification failed", err)
-    return new Response("Webhook Error", { status: 400 })
+    return new Response("Webhook error", { status: 400 })
   }
 
   console.log("📦 Event type:", event.type)
 
-  if (event.type !== "invoice.paid") {
-    console.log("⏭️ Ignored event")
-    return new Response("Ignored", { status: 200 })
-  }
+  // ✅ HANDLE CHECKOUT COMPLETION
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session
 
-  const invoice = event.data.object as Stripe.Invoice
+    const userId = session.metadata?.user_id
+    const priceId = session.metadata?.price_id
 
-  const userId =
-    invoice.lines?.data?.[0]?.metadata?.user_id ??
-    (invoice.parent as any)?.subscription_details?.metadata?.user_id
+    console.log("👤 userId:", userId)
+    console.log("💰 priceId:", priceId)
 
-  console.log("👤 userId:", userId)
-
-  if (!userId) {
-    console.error("❌ userId missing")
-    return new Response("Missing userId", { status: 400 })
-  }
-
-  const priceId =
-    invoice.lines?.data?.[0]?.pricing?.price_details?.price as string
-
-  console.log("💰 priceId:", priceId)
-
-  const CREDITS_BY_PRICE: Record<string, number> = {
-    "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200,
-    "price_1SmO6ARYoDtZ3J2YqTQWIznT": 500,
-  }
-
-  const creditsToAdd = CREDITS_BY_PRICE[priceId]
-
-  console.log("➕ creditsToAdd:", creditsToAdd)
-
-  if (!creditsToAdd) {
-    console.error("❌ Unknown price")
-    return new Response("Unknown price", { status: 400 })
-  }
-
-  console.log("🚀 Calling Supabase RPC")
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/increment_user_credits`,
-    {
-      method: "POST",
-      headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        p_user_id: userId,
-        p_amount: creditsToAdd,
-        p_reason: "stripe_invoice_paid",
-        p_stripe_event_id: event.id,
-      }),
+    if (!userId || !priceId) {
+      console.error("❌ Missing metadata on session")
+      return new Response("Missing metadata", { status: 400 })
     }
-  )
 
-  const text = await res.text()
-  console.log("📨 Supabase response:", res.status, text)
+    const CREDITS_BY_PRICE: Record<string, number> = {
+      "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200, // Pro
+      "price_1SmO6ARYoDtZ3J2YqTQWIznT": 500, // Elite
+    }
 
-  if (!res.ok) {
-    console.error("❌ Supabase failed")
-    return new Response("Supabase error", { status: 500 })
+    const creditsToAdd = CREDITS_BY_PRICE[priceId]
+
+    if (!creditsToAdd) {
+      console.error("❌ Unknown price ID:", priceId)
+      return new Response("Unknown price", { status: 400 })
+    }
+
+    console.log("➕ creditsToAdd:", creditsToAdd)
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/increment_user_credits`,
+      {
+        method: "POST",
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          p_user_id: userId,
+          p_amount: creditsToAdd,
+          p_reason: "checkout_completed",
+          p_stripe_event_id: event.id,
+        }),
+      }
+    )
+
+    const text = await res.text()
+    console.log("📨 Supabase response:", res.status, text)
+
+    return new Response("Credits applied", { status: 200 })
   }
 
-  console.log("✅ CREDITS APPLIED")
-  return new Response("OK", { status: 200 })
+  // Optional: keep invoice.paid for safety
+  if (event.type === "invoice.paid") {
+    console.log("ℹ️ invoice.paid received (no action)")
+    return new Response("OK", { status: 200 })
+  }
+
+  console.log("⏭️ Ignored event")
+  return new Response("Ignored", { status: 200 })
 }
