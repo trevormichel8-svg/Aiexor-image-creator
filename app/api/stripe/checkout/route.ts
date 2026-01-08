@@ -2,67 +2,58 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  
+  apiVersion: "2025-11-17.clover",
 })
 
 export async function POST(req: Request) {
   try {
-    const { plan, userId } = await req.json()
+    const { plan, user } = await req.json()
 
-    if (!plan || !userId) {
+    if (!plan || !user?.id || !user?.email) {
       return NextResponse.json(
-        { error: "Missing plan or userId" },
+        { error: "Missing plan or user" },
         { status: 400 }
       )
     }
 
-    const plans: Record<string, { amount: number; name: string }> = {
-      pro: { amount: 2999, name: "Pro Plan" },
-      elite: { amount: 4999, name: "Elite Plan" },
+    const PRICE_BY_PLAN: Record<string, string> = {
+      pro: "price_1SmO6tRYoDtZ3J2YUjVeOB6O",
+      elite: "price_1SmO6ARYoDtZ3J2YqTQWIznT",
     }
 
-    const selected = plans[plan]
-    if (!selected) {
-      return NextResponse.json(
-        { error: "Invalid plan" },
-        { status: 400 }
-      )
+    const priceId = PRICE_BY_PLAN[plan]
+    if (!priceId) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      payment_method_types: ["card"],
+      customer_email: user.email,
 
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-            unit_amount: selected.amount,
-            product_data: {
-              name: selected.name,
-            },
-            recurring: { interval: "month" },
-          },
+          price: priceId,
           quantity: 1,
         },
       ],
 
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}?cancelled=true`,
-
-      // ✅ THIS IS THE CRITICAL FIX
-      // Stripe copies subscription metadata → invoice metadata
+      /**
+       * ✅ THIS IS THE CRITICAL FIX
+       */
       subscription_data: {
         metadata: {
-          user_id: userId, // MUST be snake_case
+          user_id: user.id,
           plan,
         },
       },
+
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?cancelled=true`,
     })
 
     return NextResponse.json({ url: session.url })
   } catch (err) {
-    console.error("STRIPE CHECKOUT ERROR:", err)
+    console.error("❌ Stripe checkout error:", err)
     return NextResponse.json(
       { error: "Stripe checkout failed" },
       { status: 500 }
