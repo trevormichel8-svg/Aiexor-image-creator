@@ -24,17 +24,15 @@ export async function POST(req: Request) {
     return new Response("Webhook Error", { status: 400 })
   }
 
-  // Only handle successful invoice payments
   if (event.type !== "invoice.paid") {
     return new Response("Ignored event", { status: 200 })
   }
 
-  const invoice = event.data.object as Stripe.Invoice
+  // ⬇️ Cast ONCE so TypeScript stops lying
+  const invoice = event.data.object as any
 
   /**
    * STEP 1 — Resolve user_id
-   * Try invoice.metadata first
-   * Fallback to subscription.metadata
    */
   let userId = invoice.metadata?.user_id
 
@@ -58,7 +56,7 @@ export async function POST(req: Request) {
   /**
    * STEP 2 — Get Stripe price ID
    */
-  const lineItem = invoice.lines.data[0] as any
+  const lineItem = invoice.lines?.data?.[0]
   const priceId: string | undefined = lineItem?.price?.id
 
   if (!priceId) {
@@ -68,7 +66,6 @@ export async function POST(req: Request) {
 
   /**
    * STEP 3 — Map price → credits
-   * (must match your Stripe prices)
    */
   const CREDITS_BY_PRICE: Record<string, number> = {
     "price_1SmO6tRYoDtZ3J2YUjVeOB6O": 200, // Pro
@@ -83,7 +80,7 @@ export async function POST(req: Request) {
   }
 
   /**
-   * STEP 4 — Call Supabase RPC
+   * STEP 4 — Increment credits (idempotent)
    */
   const supabaseRes = await fetch(
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/increment_user_credits`,
