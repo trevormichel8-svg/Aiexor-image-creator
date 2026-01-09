@@ -60,8 +60,7 @@ export async function POST(req: Request) {
       style,
       aspect_ratio,
       quality,
-      seed,
-    });
+      });
   }
 
   return NextResponse.json({ images: results });
