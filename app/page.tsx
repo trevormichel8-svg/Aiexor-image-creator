@@ -11,17 +11,14 @@ const supabase = createClient(
 export default function Page() {
   const [user, setUser] = useState<any>(null)
   const [credits, setCredits] = useState<number>(0)
-  const [loading, setLoading] = useState(true)
+  const [prompt, setPrompt] = useState("")
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
 
-  // 🔁 Load user + credits
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
-        setLoading(false)
-        return
-      }
-
+      if (!data.user) return
       setUser(data.user)
 
       const { data: creditRow } = await supabase
@@ -31,10 +28,8 @@ export default function Page() {
         .single()
 
       setCredits(creditRow?.credits ?? 0)
-      setLoading(false)
     })
 
-    // 🔧 Remove hashtag from URL
     if (window.location.hash) {
       history.replaceState(null, "", window.location.pathname)
     }
@@ -64,28 +59,56 @@ export default function Page() {
     else alert("Failed to start checkout")
   }
 
+  async function generateImage() {
+    if (!prompt.trim()) return
+    if (credits <= 0) {
+      setShowUpgrade(true)
+      return
+    }
+
+    setLoading(true)
+    setImageUrl(null)
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      })
+
+      const data = await res.json()
+
+      if (data.image) {
+        setImageUrl(data.image)
+        setCredits((c) => c - 1)
+      } else {
+        alert("Generation failed")
+      }
+    } catch {
+      alert("Error generating image")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const LOW_CREDIT = credits > 0 && credits <= 10
   const OUT_OF_CREDITS = credits <= 0
 
   return (
     <main className="min-h-screen bg-black text-white p-4">
       {/* HEADER */}
-      <header className="flex justify-between items-center mb-6">
+      <header className="flex justify-between items-center mb-4">
         <div>
           <div className="text-lg font-bold">Aiexor</div>
           {user && (
             <div className="text-xs text-gray-400">
-              {credits > 0 ? `${credits} credits` : "FREE · 0 credits"} ·
-              1 credit / image
+              {credits} credits · 1 credit / image
             </div>
           )}
         </div>
 
         {!user ? (
-          <button
-            onClick={signIn}
-            className="border px-3 py-1 rounded"
-          >
+          <button onClick={signIn} className="border px-3 py-1 rounded">
             Sign In
           </button>
         ) : (
@@ -108,24 +131,47 @@ export default function Page() {
 
       {/* WARNINGS */}
       {LOW_CREDIT && (
-        <div className="mb-4 p-3 rounded bg-yellow-900 text-yellow-200 text-sm">
-          ⚠️ Low credits remaining. Upgrade soon.
+        <div className="mb-3 p-3 rounded bg-yellow-900 text-yellow-200 text-sm">
+          ⚠️ Low credits remaining
         </div>
       )}
 
       {OUT_OF_CREDITS && user && (
-        <div className="mb-4 p-3 rounded bg-red-900 text-red-200 text-sm">
-          ❌ You’re out of credits. Upgrade to continue.
+        <div className="mb-3 p-3 rounded bg-red-900 text-red-200 text-sm">
+          ❌ Out of credits — upgrade to continue
         </div>
       )}
 
-      {/* BODY */}
-      <h1 className="text-xl mb-4">Create your first image</h1>
+      {/* PROMPT */}
+      {user && (
+        <>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe the image you want..."
+            className="w-full p-3 rounded bg-zinc-900 border border-zinc-700 mb-3 text-sm"
+            rows={3}
+          />
 
-      {!user && (
-        <p className="text-gray-400 text-sm">
-          Sign in to generate images or buy credits.
-        </p>
+          <button
+            onClick={generateImage}
+            disabled={loading}
+            className="w-full border py-2 rounded mb-4"
+          >
+            {loading ? "Generating…" : "Generate Image"}
+          </button>
+        </>
+      )}
+
+      {/* IMAGE RESULT */}
+      {imageUrl && (
+        <div className="mt-4">
+          <img
+            src={imageUrl}
+            alt="Generated"
+            className="rounded w-full"
+          />
+        </div>
       )}
 
       {/* UPGRADE MODAL */}
@@ -159,13 +205,6 @@ export default function Page() {
               Close
             </button>
           </div>
-        </div>
-      )}
-
-      {/* PLACEHOLDER GENERATOR */}
-      {user && !OUT_OF_CREDITS && (
-        <div className="mt-6 text-gray-500 text-sm">
-          (Image generator UI goes here)
         </div>
       )}
     </main>
