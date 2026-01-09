@@ -41,7 +41,7 @@ export default function ImageCard({ image, onRefresh, onRemix }: Props) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative mb-4">
       <Image
         src={image.image_url}
         alt={image.prompt}
@@ -56,7 +56,7 @@ export default function ImageCard({ image, onRefresh, onRemix }: Props) {
           onClick={generateVariations}
           className="flex-1 rounded-md bg-neutral-800 py-1 text-sm"
         >
-          🔁 Variations
+          🔁 Variations ×4
         </button>
 
         <button

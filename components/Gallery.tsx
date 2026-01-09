@@ -11,7 +11,12 @@ type ImageRow = {
   style: string;
   aspect_ratio: string;
   quality: string;
+  created_at: string;
 };
+
+function formatDate(date: string) {
+  return new Date(date).toDateString();
+}
 
 export default function Gallery({
   onRemix,
@@ -56,16 +61,31 @@ export default function Gallery({
     );
   }
 
+  let lastDate = "";
+
   return (
-    <div className="grid grid-cols-2 gap-2 mt-6">
-      {images.map((img) => (
-        <ImageCard
-          key={img.id}
-          image={img}
-          onRefresh={loadImages}
-          onRemix={onRemix}
-        />
-      ))}
+    <div className="mt-6">
+      {images.map((img) => {
+        const currentDate = formatDate(img.created_at);
+        const showDivider = currentDate !== lastDate;
+        lastDate = currentDate;
+
+        return (
+          <div key={img.id}>
+            {showDivider && (
+              <div className="my-4 text-xs uppercase opacity-50">
+                {currentDate}
+              </div>
+            )}
+
+            <ImageCard
+              image={img}
+              onRefresh={loadImages}
+              onRemix={onRemix}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
