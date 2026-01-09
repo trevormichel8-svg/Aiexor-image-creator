@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const results: string[] = [];
 
   for (let i = 0; i < imagesToGenerate; i++) {
-    const seed = Math.floor(Math.random() * 1_000_000_000);
+    
 
     const result = await openai.images.generate({
       model: "gpt-image-1",
@@ -48,8 +48,7 @@ export async function POST(req: Request) {
           ? "1024x1792"
           : "1024x1024",
       quality: quality === "ultra" ? "high" : "standard",
-      seed,
-    });
+       });
 
     const imageUrl = result.data[0].url!;
     results.push(imageUrl);
