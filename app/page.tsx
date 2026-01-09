@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
-import { Gallery } from "@/components/Gallery"
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
