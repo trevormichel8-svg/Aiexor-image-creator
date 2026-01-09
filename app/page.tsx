@@ -9,10 +9,17 @@ const supabase = createClient(
 )
 
 const LOW_CREDIT_THRESHOLD = 20
+const COST_PER_IMAGE = 1
+
+type UserCredits = {
+  credits: number
+  plan: "free" | "pro" | "elite" | null
+  current_period_end: string | null
+}
 
 export default function Page() {
   const [user, setUser] = useState<any>(null)
-  const [credits, setCredits] = useState<number | null>(null)
+  const [data, setData] = useState<UserCredits | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -26,10 +33,10 @@ export default function Page() {
   async function fetchCredits() {
     const { data } = await supabase
       .from("user_credits")
-      .select("credits")
+      .select("credits, plan, current_period_end")
       .single()
 
-    if (data) setCredits(data.credits)
+    if (data) setData(data)
   }
 
   async function signIn() {
@@ -54,30 +61,31 @@ export default function Page() {
       }),
     })
 
-    const data = await res.json()
-
-    if (data.url) {
-      window.location.href = data.url
-    } else {
-      alert("Failed to start checkout")
-    }
+    const json = await res.json()
+    if (json.url) window.location.href = json.url
+    else alert("Failed to start checkout")
   }
 
-  // ---- UX STATE ----
+  async function openPortal() {
+    const res = await fetch("/api/stripe/portal", { method: "POST" })
+    const json = await res.json()
+    if (json.url) window.location.href = json.url
+  }
+
+  if (loading) return null
+
+  const credits = data?.credits ?? null
+  const plan = data?.plan ?? "free"
+
   const isLowCredits =
     credits !== null && credits > 0 && credits <= LOW_CREDIT_THRESHOLD
 
   const isOutOfCredits = credits === 0
 
-  // TEMP plan inference (safe for now)
-  const plan =
-    credits !== null && credits >= 800
-      ? "Elite"
-      : credits !== null && credits >= 300
-      ? "Pro"
-      : "Free"
-
-  const hasSubscription = plan === "Elite" || plan === "Pro"
+  const renewDate =
+    data?.current_period_end
+      ? new Date(data.current_period_end).toLocaleDateString()
+      : null
 
   return (
     <main className="min-h-screen bg-black text-teal-300 p-4">
@@ -93,10 +101,13 @@ export default function Page() {
             Sign In
           </button>
         ) : (
-          <div className="flex flex-col items-end text-sm">
-            <span>
-              {plan} · {credits ?? "…"} credits
-            </span>
+          <div className="text-right text-sm">
+            <div className="font-semibold">
+              {plan.toUpperCase()} · {credits ?? "…"} credits
+            </div>
+            <div className="text-xs text-gray-400">
+              –{COST_PER_IMAGE} credit per image
+            </div>
             <button
               onClick={signOut}
               className="text-xs underline text-gray-400"
@@ -144,16 +155,13 @@ export default function Page() {
       )}
 
       {/* BODY */}
-      <h1 className="text-xl mb-4">Create your first image</h1>
-
       {!user ? (
         <p className="text-sm text-gray-400">
           Please sign in to generate images or buy credits.
         </p>
       ) : (
         <>
-          {/* SUBSCRIPTION ACTIONS */}
-          {!hasSubscription ? (
+          {plan === "free" ? (
             <>
               <h2 className="mt-6 mb-2 font-semibold">
                 Choose a subscription
@@ -177,15 +185,17 @@ export default function Page() {
             </>
           ) : (
             <div className="mt-6 max-w-sm rounded border border-teal-500/40 p-3 text-sm">
-              <div className="mb-2">
-                Current plan: <strong>{plan}</strong>
+              <div>
+                Plan: <strong>{plan.toUpperCase()}</strong>
               </div>
-
+              {renewDate && (
+                <div className="text-xs text-gray-400">
+                  Renews on {renewDate}
+                </div>
+              )}
               <button
-                onClick={() =>
-                  alert("Stripe portal coming next (safe to add)")
-                }
-                className="underline text-teal-400"
+                onClick={openPortal}
+                className="mt-2 underline text-teal-400"
               >
                 Manage subscription
               </button>
