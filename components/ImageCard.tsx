@@ -3,12 +3,22 @@
 import Image from "next/image";
 import { useState } from "react";
 
-type Props = {
-  image: any;
-  onRefresh: () => void;
+type ImageRow = {
+  id: string;
+  image_url: string;
+  prompt: string;
+  style: string;
+  aspect_ratio: string;
+  quality: string;
 };
 
-export default function ImageCard({ image, onRefresh }: Props) {
+type Props = {
+  image: ImageRow;
+  onRefresh: () => void;
+  onRemix: (image: ImageRow) => void;
+};
+
+export default function ImageCard({ image, onRefresh, onRemix }: Props) {
   const [loading, setLoading] = useState(false);
 
   async function generateVariations() {
@@ -50,8 +60,8 @@ export default function ImageCard({ image, onRefresh }: Props) {
         </button>
 
         <button
-          disabled
-          className="flex-1 rounded-md bg-neutral-900 py-1 text-sm opacity-50"
+          onClick={() => onRemix(image)}
+          className="flex-1 rounded-md bg-neutral-900 py-1 text-sm"
         >
           ✏️ Remix
         </button>

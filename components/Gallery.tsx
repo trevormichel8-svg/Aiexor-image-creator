@@ -4,8 +4,21 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import ImageCard from "./ImageCard";
 
-export default function Gallery() {
-  const [images, setImages] = useState<any[]>([]);
+type ImageRow = {
+  id: string;
+  image_url: string;
+  prompt: string;
+  style: string;
+  aspect_ratio: string;
+  quality: string;
+};
+
+export default function Gallery({
+  onRemix,
+}: {
+  onRemix: (image: ImageRow) => void;
+}) {
+  const [images, setImages] = useState<ImageRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function loadImages() {
@@ -46,7 +59,12 @@ export default function Gallery() {
   return (
     <div className="grid grid-cols-2 gap-2 mt-6">
       {images.map((img) => (
-        <ImageCard key={img.id} image={img} onRefresh={loadImages} />
+        <ImageCard
+          key={img.id}
+          image={img}
+          onRefresh={loadImages}
+          onRemix={onRemix}
+        />
       ))}
     </div>
   );
