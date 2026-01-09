@@ -1,90 +1,69 @@
-import { NextResponse } from "next/server"
-import OpenAI from "openai"
-import { cookies } from "next/headers"
-import { supabaseServer } from "@/lib/supabaseServer"
+import { NextResponse } from "next/server";
+import OpenAI from "openai";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
-})
+});
 
 export async function POST(req: Request) {
-  try {
-    const { prompt } = await req.json()
+  const body = await req.json();
+  const {
+    prompt,
+    style,
+    aspect_ratio,
+    quality,
+    mode = "generate", // "generate" | "variation"
+  } = body;
 
-    if (!prompt || prompt.trim().length === 0) {
-      return NextResponse.json(
-        { error: "Missing prompt" },
-        { status: 400 }
-      )
-    }
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { cookies: { get: (name) => cookieStore.get(name)?.value } }
+  );
 
-    // 🔐 Read Supabase session from cookies
-    const cookieStore = cookies()
-    const accessToken = cookieStore.get("sb-access-token")?.value
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    if (!accessToken) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 401 }
-      )
-    }
-
-    const supabase = supabaseServer()
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser(accessToken)
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 401 }
-      )
-    }
-
-    // 💳 Get credits
-    const { data: creditRow } = await supabase
-      .from("user_credits")
-      .select("credits")
-      .eq("user_id", user.id)
-      .single()
-
-    const credits = creditRow?.credits ?? 0
-
-    if (credits <= 0) {
-      return NextResponse.json(
-        { error: "No credits remaining" },
-        { status: 402 }
-      )
-    }
-
-    // 🎨 Generate image
-    const image = await openai.images.generate({
-      model: "gpt-image-1",
-      prompt,
-      size: "1024x1024",
-    })
-
-    const imageUrl = image.data[0].url
-
-    // ➖ Deduct 1 credit
-    const remainingCredits = credits - 1
-
-    await supabase
-      .from("user_credits")
-      .update({ credits: remainingCredits })
-      .eq("user_id", user.id)
-
-    return NextResponse.json({
-      imageUrl,
-      remainingCredits,
-    })
-  } catch (err) {
-    console.error("IMAGE GENERATE ERROR:", err)
-    return NextResponse.json(
-      { error: "Image generation failed" },
-      { status: 500 }
-    )
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const imagesToGenerate = mode === "variation" ? 4 : 1;
+  const results: string[] = [];
+
+  for (let i = 0; i < imagesToGenerate; i++) {
+    const seed = Math.floor(Math.random() * 1_000_000_000);
+
+    const result = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt: `${prompt}, style: ${style}`,
+      size:
+        aspect_ratio === "16:9"
+          ? "1792x1024"
+          : aspect_ratio === "9:16"
+          ? "1024x1792"
+          : "1024x1024",
+      quality: quality === "ultra" ? "high" : "standard",
+      seed,
+    });
+
+    const imageUrl = result.data[0].url!;
+    results.push(imageUrl);
+
+    await supabase.from("images").insert({
+      user_id: user.id,
+      image_url: imageUrl,
+      prompt,
+      style,
+      aspect_ratio,
+      quality,
+      seed,
+    });
+  }
+
+  return NextResponse.json({ images: results });
 }
