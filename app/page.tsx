@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
 import ImageGenerator from "./components/ImageGenerator"
+import Gallery from "./components/Gallery"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,9 +59,6 @@ export default function Page() {
     if (data.url) window.location.href = data.url
   }
 
-  const lowCredits = plan !== "free" && credits <= 3
-  const outOfCredits = plan !== "free" && credits <= 0
-
   function UpgradeModal() {
     if (!showUpgrade) return null
 
@@ -69,7 +67,7 @@ export default function Page() {
         <div className="bg-zinc-900 p-6 rounded-lg w-[90%] max-w-sm text-center">
           <h2 className="text-lg font-bold mb-2">Upgrade Required</h2>
           <p className="text-sm text-gray-400 mb-4">
-            Remove watermarks and get more images.
+            Remove watermarks and unlock more images.
           </p>
 
           <button
@@ -97,11 +95,12 @@ export default function Page() {
     )
   }
 
+  const outOfCredits = plan !== "free" && credits <= 0
+
   return (
     <main className="min-h-screen bg-black text-white p-4">
       <UpgradeModal />
 
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-4">
         <div className="font-bold text-lg">Aiexor</div>
 
@@ -116,32 +115,12 @@ export default function Page() {
         )}
       </div>
 
-      {/* USER STATUS */}
       {user && (
         <div className="mb-4 text-sm text-gray-300">
-          <div>
-            <strong>{plan.toUpperCase()}</strong> • {credits} credits
-          </div>
-          <div className="text-xs text-gray-500">
-            1 credit per image
-          </div>
+          <strong>{plan.toUpperCase()}</strong> • {credits} credits
         </div>
       )}
 
-      {/* WARNINGS */}
-      {lowCredits && (
-        <div className="mb-3 p-2 border border-yellow-500 text-yellow-400 rounded text-sm">
-          ⚠ Low credits remaining
-        </div>
-      )}
-
-      {outOfCredits && (
-        <div className="mb-3 p-2 border border-red-500 text-red-400 rounded text-sm">
-          ❌ Out of credits — upgrade to continue
-        </div>
-      )}
-
-      {/* MAIN CONTENT */}
       {!user ? (
         <p className="text-gray-400 text-sm">
           Sign in to generate images.
@@ -158,6 +137,8 @@ export default function Page() {
             disabled={outOfCredits}
             onOutOfCredits={() => setShowUpgrade(true)}
           />
+
+          <Gallery userId={user.id} />
 
           <button
             onClick={() => setShowUpgrade(true)}
