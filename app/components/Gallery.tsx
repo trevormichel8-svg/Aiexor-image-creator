@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 type ImageItem = {
   id: string
   src: string
+  isVariation?: boolean
 }
 
 const PAGE_SIZE = 6
@@ -13,9 +14,9 @@ export default function Gallery({ isFree }: { isFree: boolean }) {
   const [allImages, setAllImages] = useState<ImageItem[]>([])
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
-  // Mock images (replace later with real generated images)
+  // Mock initial images
   useEffect(() => {
-    const generated = Array.from({ length: 40 }).map((_, i) => ({
+    const generated = Array.from({ length: 20 }).map((_, i) => ({
       id: `${i}`,
       src: `/placeholder${(i % 3) + 1}.png`,
     }))
@@ -27,17 +28,26 @@ export default function Gallery({ isFree }: { isFree: boolean }) {
   }
 
   function deleteImage(id: string) {
-    const confirmDelete = confirm("Delete this image?")
-    if (!confirmDelete) return
-
+    if (!confirm("Delete this image?")) return
     setAllImages((prev) => prev.filter((img) => img.id !== id))
+  }
+
+  function remixImage(image: ImageItem) {
+    const remix: ImageItem = {
+      id: crypto.randomUUID(),
+      src: image.src,
+      isVariation: true,
+    }
+
+    // Add remix to top
+    setAllImages((prev) => [remix, ...prev])
   }
 
   function handleDownload() {
     alert("Upgrade required to download images")
   }
 
-  // Infinite scroll trigger
+  // Infinite scroll
   useEffect(() => {
     function onScroll() {
       const nearBottom =
@@ -76,6 +86,13 @@ export default function Gallery({ isFree }: { isFree: boolean }) {
               className={`w-full ${isFree ? "opacity-60" : ""}`}
             />
 
+            {/* VARIATION BADGE */}
+            {img.isVariation && (
+              <div className="absolute top-1 left-1 bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded">
+                Remix
+              </div>
+            )}
+
             {/* WATERMARK */}
             {isFree && (
               <div className="absolute inset-0 flex items-center justify-center text-white text-xl font-bold opacity-70 pointer-events-none">
@@ -85,6 +102,13 @@ export default function Gallery({ isFree }: { isFree: boolean }) {
 
             {/* ACTIONS */}
             <div className="absolute bottom-1 right-1 flex gap-1">
+              <button
+                onClick={() => remixImage(img)}
+                className="bg-blue-600 text-white text-xs px-2 py-1 rounded"
+              >
+                Remix
+              </button>
+
               <button
                 onClick={isFree ? handleDownload : undefined}
                 className="bg-black text-white text-xs px-2 py-1 rounded"
@@ -103,7 +127,7 @@ export default function Gallery({ isFree }: { isFree: boolean }) {
         ))}
       </div>
 
-      {/* LOADING INDICATOR */}
+      {/* LOADING */}
       {visibleCount < allImages.length && (
         <div className="text-center text-zinc-500 text-sm my-4">
           Loading more…
