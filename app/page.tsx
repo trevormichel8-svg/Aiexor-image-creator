@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
-import ImageGenerator from "./components/ImageGenerator"
 import Gallery from "./components/Gallery"
 
 const supabase = createClient(
@@ -13,27 +12,24 @@ const supabase = createClient(
 export default function Page() {
   const [user, setUser] = useState<any>(null)
   const [credits, setCredits] = useState<number>(0)
-  const [plan, setPlan] = useState<string>("free")
-  const [showUpgrade, setShowUpgrade] = useState(false)
+  const [prompt, setPrompt] = useState("")
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
         setUser(data.user)
-        loadCredits(data.user.id)
+        fetchCredits()
       }
     })
   }, [])
 
-  async function loadCredits(userId: string) {
+  async function fetchCredits() {
     const { data } = await supabase
       .from("user_credits")
-      .select("credits, plan")
-      .eq("user_id", userId)
+      .select("credits")
       .single()
 
-    setCredits(data?.credits ?? 0)
-    setPlan(data?.plan ?? "free")
+    if (data) setCredits(data.credits)
   }
 
   async function signIn() {
@@ -48,59 +44,12 @@ export default function Page() {
     location.reload()
   }
 
-  async function subscribe(plan: "pro" | "elite") {
-    const res = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan, userId: user.id }),
-    })
-
-    const data = await res.json()
-    if (data.url) window.location.href = data.url
-  }
-
-  function UpgradeModal() {
-    if (!showUpgrade) return null
-
-    return (
-      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div className="bg-zinc-900 p-6 rounded-lg w-[90%] max-w-sm text-center">
-          <h2 className="text-lg font-bold mb-2">Upgrade Required</h2>
-          <p className="text-sm text-gray-400 mb-4">
-            Unlock downloads and remove watermarks.
-          </p>
-
-          <button
-            onClick={() => subscribe("pro")}
-            className="w-full border border-teal-500 p-2 rounded mb-2"
-          >
-            Pro — $29.99 / month
-          </button>
-
-          <button
-            onClick={() => subscribe("elite")}
-            className="w-full border border-teal-500 p-2 rounded"
-          >
-            Elite — $49.99 / month
-          </button>
-
-          <button
-            onClick={() => setShowUpgrade(false)}
-            className="mt-4 text-sm text-gray-400"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  const outOfCredits = plan !== "free" && credits <= 0
+  const isFree = !user || credits <= 0
+  const lowCredits = credits > 0 && credits <= 5
 
   return (
     <main className="min-h-screen bg-black text-white p-4">
-      <UpgradeModal />
-
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-4">
         <div className="font-bold text-lg">Aiexor</div>
 
@@ -109,49 +58,48 @@ export default function Page() {
             Sign In
           </button>
         ) : (
-          <button onClick={signOut} className="border px-3 py-1 rounded">
-            Sign Out
-          </button>
+          <div className="flex gap-2 items-center text-sm">
+            <span>
+              {isFree ? "FREE" : `${credits} credits`}
+            </span>
+            <button onClick={signOut} className="border px-2 py-1 rounded">
+              Sign Out
+            </button>
+          </div>
         )}
       </div>
 
-      {user && (
-        <div className="mb-4 text-sm text-gray-300">
-          <strong>{plan.toUpperCase()}</strong> • {credits} credits
+      {/* WARNINGS */}
+      {lowCredits && (
+        <div className="bg-yellow-600 text-black p-2 rounded mb-3 text-sm">
+          ⚠️ Low credits — upgrade soon
         </div>
       )}
 
-      {!user ? (
-        <p className="text-gray-400 text-sm">
-          Sign in to generate images.
-        </p>
-      ) : (
-        <>
-          {plan === "free" && (
-            <div className="mb-4 text-xs text-gray-400">
-              Free tier • Watermarked • Downloads locked
-            </div>
-          )}
-
-          <ImageGenerator
-            disabled={outOfCredits}
-            onOutOfCredits={() => setShowUpgrade(true)}
-          />
-
-          <Gallery
-            userId={user.id}
-            plan={plan}
-            onUpgrade={() => setShowUpgrade(true)}
-          />
-
-          <button
-            onClick={() => setShowUpgrade(true)}
-            className="mt-6 border border-teal-500 p-2 rounded w-full max-w-sm"
-          >
-            Buy / Upgrade
-          </button>
-        </>
+      {isFree && user && (
+        <div className="bg-red-600 p-3 rounded mb-4 text-sm">
+          🚫 Free tier — watermarked images & no downloads
+        </div>
       )}
+
+      {/* PROMPT */}
+      <textarea
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder="Describe the image you want to generate…"
+        className="w-full bg-zinc-900 p-3 rounded mb-4"
+      />
+
+      {/* GENERATE (UI ONLY FOR NOW) */}
+      <button
+        className="w-full bg-white text-black py-2 rounded mb-6 opacity-60"
+        disabled
+      >
+        Generate Image (coming next)
+      </button>
+
+      {/* GALLERY */}
+      <Gallery isFree={isFree} />
     </main>
   )
 }
