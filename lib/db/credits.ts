@@ -1,25 +1,18 @@
-import { supabaseServer } from "@/lib/supabase/server";
+import { createServerClient } from "@/supabase/server";
 
-export async function getUserCredits(userId: string) {
-  const supabase = supabaseServer();
+export async function consumeUserCredit(userId: string): Promise<number> {
+  const supabase = createServerClient();
 
-  const { data, error } = await supabase
-    .from("user_credits")
-    .select("credits")
-    .eq("user_id", userId)
-    .single();
-
-  if (error) throw error;
-  return data.credits;
-}
-
-export async function deductCredits(userId: string, amount: number) {
-  const supabase = supabaseServer();
-
-  const { error } = await supabase.rpc("deduct_credits", {
-    p_user_id: userId,
-    p_amount: amount,
+  const { data, error } = await supabase.rpc("consume_credit", {
+    user_id: userId,
   });
 
-  if (error) throw error;
+  if (error) {
+    if (error.message.includes("NO_CREDITS")) {
+      throw new Error("INSUFFICIENT_CREDITS");
+    }
+    throw error;
+  }
+
+  return data;
 }
