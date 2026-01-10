@@ -1,141 +1,77 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
+import { useState } from "react"
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+type ImageItem = {
+  id: string
+  src: string
+}
 
-export default function Gallery({
-  userId,
-  plan,
-  onUpgrade,
-}: {
-  userId: string
-  plan: string
-  onUpgrade: () => void
-}) {
-  const [images, setImages] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [activeImage, setActiveImage] = useState<any | null>(null)
+export default function Gallery({ isFree }: { isFree: boolean }) {
+  const [images, setImages] = useState<ImageItem[]>([
+    { id: "1", src: "/placeholder1.png" },
+    { id: "2", src: "/placeholder2.png" },
+    { id: "3", src: "/placeholder3.png" },
+  ])
 
-  useEffect(() => {
-    loadImages()
-  }, [])
+  function deleteImage(id: string) {
+    const confirmDelete = confirm("Delete this image?")
+    if (!confirmDelete) return
 
-  async function loadImages() {
-    const { data } = await supabase
-      .from("image_generations")
-      .select("id, image_url, created_at, plan")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(30)
-
-    setImages(data ?? [])
-    setLoading(false)
+    setImages((prev) => prev.filter((img) => img.id !== id))
   }
 
-  function FullscreenViewer() {
-    if (!activeImage) return null
+  function handleDownload() {
+    alert("Upgrade required to download images")
+  }
 
-    const locked = plan === "free"
-
+  if (images.length === 0) {
     return (
-      <div className="fixed inset-0 bg-black z-50 flex flex-col">
-        {/* HEADER */}
-        <div className="p-3 flex justify-between items-center">
-          <div className="text-sm text-gray-300">
-            {locked ? "Preview Locked" : "Full Quality"}
-          </div>
-
-          <button
-            onClick={() => setActiveImage(null)}
-            className="text-white text-xl"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* IMAGE */}
-        <div className="flex-1 flex items-center justify-center p-4">
-          <img
-            src={activeImage.image_url}
-            alt="Preview"
-            className={`max-h-full max-w-full rounded ${
-              locked ? "blur-md opacity-60" : ""
-            }`}
-          />
-        </div>
-
-        {/* FOOTER */}
-        {locked ? (
-          <div className="p-4 text-center">
-            <p className="text-sm text-gray-300 mb-3">
-              Upgrade to download watermark-free images
-            </p>
-            <button
-              onClick={onUpgrade}
-              className="border border-teal-500 px-4 py-2 rounded"
-            >
-              Upgrade
-            </button>
-          </div>
-        ) : (
-          <div className="p-3 text-center text-xs text-gray-400">
-            Long-press to save image
-          </div>
-        )}
+      <div className="text-center text-zinc-400 mt-8">
+        No images yet
       </div>
-    )
-  }
-
-  if (loading) {
-    return <p className="text-sm text-gray-400 mt-4">Loading gallery…</p>
-  }
-
-  if (!images.length) {
-    return (
-      <p className="text-sm text-gray-400 mt-4">
-        No images yet. Generate your first one!
-      </p>
     )
   }
 
   return (
-    <>
-      <FullscreenViewer />
+    <div className="grid grid-cols-2 gap-3">
+      {images.map((img) => (
+        <div
+          key={img.id}
+          className="relative bg-zinc-900 rounded overflow-hidden"
+        >
+          {/* IMAGE */}
+          <img
+            src={img.src}
+            alt="generated"
+            className={`w-full ${isFree ? "opacity-60" : ""}`}
+          />
 
-      <div className="mt-8">
-        <h2 className="text-sm font-semibold mb-3 text-gray-300">
-          Your Images
-        </h2>
+          {/* WATERMARK */}
+          {isFree && (
+            <div className="absolute inset-0 flex items-center justify-center text-white text-xl font-bold opacity-70 pointer-events-none">
+              Aiexor
+            </div>
+          )}
 
-        <div className="grid grid-cols-2 gap-2">
-          {images.map((img) => (
+          {/* ACTION BAR */}
+          <div className="absolute bottom-1 right-1 flex gap-1">
             <button
-              key={img.id}
-              onClick={() => setActiveImage(img)}
-              className="relative border border-zinc-700 rounded overflow-hidden"
+              onClick={isFree ? handleDownload : undefined}
+              className="bg-black text-white text-xs px-2 py-1 rounded"
             >
-              <img
-                src={img.image_url}
-                alt="Generated"
-                className={`w-full h-full object-cover ${
-                  plan === "free" ? "blur-sm opacity-80" : ""
-                }`}
-              />
-
-              {plan === "free" && (
-                <div className="absolute inset-0 flex items-center justify-center text-xs bg-black/40">
-                  Locked
-                </div>
-              )}
+              {isFree ? "Upgrade" : "Download"}
             </button>
-          ))}
+
+            <button
+              onClick={() => deleteImage(img.id)}
+              className="bg-red-600 text-white text-xs px-2 py-1 rounded"
+            >
+              Delete
+            </button>
+          </div>
         </div>
-      </div>
-    </>
+      ))}
+    </div>
   )
 }
