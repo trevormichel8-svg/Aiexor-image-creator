@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import OpenAI from "openai"
+import sharp from "sharp"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,97 +19,109 @@ export async function POST(req: Request) {
     const { prompt, userId } = await req.json()
 
     if (!prompt || !userId) {
-      return NextResponse.json(
-        { error: "Missing prompt or userId" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Missing prompt or user" }, { status: 400 })
     }
 
-    // 1️⃣ Fetch user credit state
-    const { data: creditsRow, error } = await supabase
+    /* ---------------------------------------------------
+       1️⃣ GET USER PLAN + CREDITS
+    --------------------------------------------------- */
+    const { data: creditRow } = await supabase
       .from("user_credits")
-      .select("credits, free_daily_used, free_daily_date")
+      .select("credits, plan")
       .eq("user_id", userId)
       .single()
 
-    if (error || !creditsRow) {
-      return NextResponse.json(
-        { error: "Credits record not found" },
-        { status: 404 }
-      )
+    const plan = creditRow?.plan ?? "free"
+    const credits = creditRow?.credits ?? 0
+
+    /* ---------------------------------------------------
+       2️⃣ FREE DAILY LIMIT (DALL·E)
+    --------------------------------------------------- */
+    if (plan === "free") {
+      const today = new Date().toISOString().slice(0, 10)
+
+      const { count } = await supabase
+        .from("image_generations")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("day", today)
+
+      if ((count ?? 0) >= FREE_DAILY_LIMIT) {
+        return NextResponse.json(
+          { error: "Daily free limit reached" },
+          { status: 403 }
+        )
+      }
     }
 
-    const today = new Date().toISOString().slice(0, 10)
-
-    let paidCredits = creditsRow.credits ?? 0
-    let freeUsed = creditsRow.free_daily_used ?? 0
-    let freeDate = creditsRow.free_daily_date
-
-    // 2️⃣ Reset free counter if new day
-    if (freeDate !== today) {
-      freeUsed = 0
-      freeDate = today
-    }
-
-    // 3️⃣ Decide generation tier
-    let tier: "paid" | "free"
-
-    if (paidCredits > 0) {
-      tier = "paid"
-    } else if (freeUsed < FREE_DAILY_LIMIT) {
-      tier = "free"
-    } else {
-      return NextResponse.json(
-        { error: "daily_limit_reached" },
-        { status: 402 }
-      )
-    }
-
-    // 4️⃣ Generate image
+    /* ---------------------------------------------------
+       3️⃣ GENERATE IMAGE
+    --------------------------------------------------- */
     const image = await openai.images.generate({
-      model: "gpt-image-1",
+      model: "gpt-image-1", // DALL·E equivalent
       prompt,
-      size: tier === "free" ? "512x512" : "1024x1024",
-      quality: tier === "free" ? "standard" : "high",
+      size: "1024x1024",
     })
 
-    const imageUrl = image.data[0]?.url
+    const imageBase64 = image.data[0].b64_json
+    let imageBuffer = Buffer.from(imageBase64, "base64")
 
-    if (!imageUrl) {
-      return NextResponse.json(
-        { error: "Image generation failed" },
-        { status: 500 }
+    /* ---------------------------------------------------
+       4️⃣ APPLY WATERMARK (FREE USERS ONLY)
+    --------------------------------------------------- */
+    if (plan === "free") {
+      const watermark = Buffer.from(
+        `<svg width="1024" height="1024">
+          <text x="98%" y="98%"
+            font-size="32"
+            fill="white"
+            fill-opacity="0.35"
+            text-anchor="end"
+            font-family="Arial, sans-serif">
+            Aiexor • Free Preview
+          </text>
+        </svg>`
       )
+
+      imageBuffer = await sharp(imageBuffer)
+        .composite([{ input: watermark, gravity: "southeast" }])
+        .png()
+        .toBuffer()
     }
 
-    // 5️⃣ Update credits
-    if (tier === "paid") {
+    /* ---------------------------------------------------
+       5️⃣ LOG GENERATION
+    --------------------------------------------------- */
+    await supabase.from("image_generations").insert({
+      user_id: userId,
+      day: new Date().toISOString().slice(0, 10),
+      plan,
+    })
+
+    /* ---------------------------------------------------
+       6️⃣ DEDUCT CREDIT (PAID ONLY)
+    --------------------------------------------------- */
+    if (plan !== "free") {
+      if (credits <= 0) {
+        return NextResponse.json(
+          { error: "Out of credits" },
+          { status: 403 }
+        )
+      }
+
       await supabase
         .from("user_credits")
-        .update({ credits: paidCredits - 1 })
-        .eq("user_id", userId)
-    } else {
-      await supabase
-        .from("user_credits")
-        .update({
-          free_daily_used: freeUsed + 1,
-          free_daily_date: freeDate,
-        })
+        .update({ credits: credits - 1 })
         .eq("user_id", userId)
     }
 
-    return NextResponse.json({
-      image: imageUrl,
-      tier,
-      remainingPaidCredits: tier === "paid" ? paidCredits - 1 : paidCredits,
-      freeUsed: tier === "free" ? freeUsed + 1 : freeUsed,
-      freeLimit: FREE_DAILY_LIMIT,
+    return new NextResponse(imageBuffer, {
+      headers: {
+        "Content-Type": "image/png",
+      },
     })
   } catch (err) {
-    console.error("❌ Image generation error:", err)
-    return NextResponse.json(
-      { error: "generation_failed" },
-      { status: 500 }
-    )
+    console.error("IMAGE GEN ERROR:", err)
+    return NextResponse.json({ error: "Failed to generate image" }, { status: 500 })
   }
 }
