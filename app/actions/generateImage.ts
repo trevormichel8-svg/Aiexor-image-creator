@@ -1,16 +1,26 @@
-"use server";
-
-import { consumeUserCredit } from "@/db/credits";
-import { getUser } from "@/auth/server";
-import { generateImage } from "@/lib/image";
+"use server"
 
 export async function generateImageAction(prompt: string) {
-  const user = await getUser();
-  if (!user) throw new Error("UNAUTHORIZED");
+  if (!prompt || prompt.trim().length === 0) {
+    throw new Error("Prompt is required")
+  }
 
-  await consumeUserCredit(user.id);
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/api/generate`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt }),
+      cache: "no-store",
+    }
+  )
 
-  const imageUrl = await generateImage(prompt);
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || "Image generation failed")
+  }
 
-  return { imageUrl };
+  return res.json()
 }
