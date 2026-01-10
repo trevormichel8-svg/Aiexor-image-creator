@@ -45,61 +45,67 @@ export default function Page() {
   }
 
   const isFree = !user || credits <= 0
-  const lowCredits = credits > 0 && credits <= 5
 
   return (
-    <main className="min-h-screen bg-black text-white p-4">
+    <main className="min-h-screen bg-black text-white flex flex-col">
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-4">
-        <div className="font-bold text-lg">Aiexor</div>
+      <header className="flex justify-between items-center px-4 py-3 border-b border-zinc-800">
+        <div className="font-semibold text-lg tracking-wide">Aiexor</div>
 
         {!user ? (
-          <button onClick={signIn} className="border px-3 py-1 rounded">
-            Sign In
+          <button
+            onClick={signIn}
+            className="text-sm border border-zinc-700 px-3 py-1 rounded"
+          >
+            Sign in
           </button>
         ) : (
-          <div className="flex gap-2 items-center text-sm">
-            <span>
-              {isFree ? "FREE" : `${credits} credits`}
-            </span>
-            <button onClick={signOut} className="border px-2 py-1 rounded">
-              Sign Out
+          <div className="flex items-center gap-3 text-sm text-zinc-400">
+            <span>{isFree ? "Free" : `${credits} credits`}</span>
+            <button
+              onClick={signOut}
+              className="border border-zinc-700 px-3 py-1 rounded text-white"
+            >
+              Sign out
             </button>
           </div>
         )}
-      </div>
+      </header>
 
-      {/* WARNINGS */}
-      {lowCredits && (
-        <div className="bg-yellow-600 text-black p-2 rounded mb-3 text-sm">
-          ⚠️ Low credits — upgrade soon
+      {/* MAIN PROMPT AREA */}
+      <section className="flex flex-col items-center px-4 py-10">
+        <div className="w-full max-w-xl">
+          <h1 className="text-xl font-medium mb-4 text-center">
+            Describe the image you want to generate
+          </h1>
+
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="A cinematic portrait of a cyberpunk astronaut..."
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-4 resize-none focus:outline-none focus:border-teal-500"
+            rows={4}
+          />
+
+          <button
+            disabled
+            className="w-full mt-4 bg-teal-500 text-black py-2 rounded-lg font-medium opacity-60 cursor-not-allowed"
+          >
+            Generate image
+          </button>
+
+          {isFree && user && (
+            <p className="text-xs text-zinc-500 mt-3 text-center">
+              Free images are watermarked · Upgrade to download
+            </p>
+          )}
         </div>
-      )}
-
-      {isFree && user && (
-        <div className="bg-red-600 p-3 rounded mb-4 text-sm">
-          🚫 Free tier — watermarked images & no downloads
-        </div>
-      )}
-
-      {/* PROMPT */}
-      <textarea
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Describe the image you want to generate…"
-        className="w-full bg-zinc-900 p-3 rounded mb-4"
-      />
-
-      {/* GENERATE (UI ONLY FOR NOW) */}
-      <button
-        className="w-full bg-white text-black py-2 rounded mb-6 opacity-60"
-        disabled
-      >
-        Generate Image (coming next)
-      </button>
+      </section>
 
       {/* GALLERY */}
-      <Gallery isFree={isFree} />
+      <section className="flex-1 px-4 pb-10">
+        <Gallery isFree={isFree} />
+      </section>
     </main>
   )
 }
