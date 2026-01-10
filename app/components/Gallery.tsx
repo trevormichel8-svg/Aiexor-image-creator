@@ -4,135 +4,67 @@ import { useEffect, useState } from "react"
 
 type ImageItem = {
   id: string
-  src: string
-  isVariation?: boolean
+  url: string
 }
 
-const PAGE_SIZE = 6
-
 export default function Gallery({ isFree }: { isFree: boolean }) {
-  const [allImages, setAllImages] = useState<ImageItem[]>([])
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [images, setImages] = useState<ImageItem[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Mock initial images
   useEffect(() => {
-    const generated = Array.from({ length: 20 }).map((_, i) => ({
-      id: `${i}`,
-      src: `/placeholder${(i % 3) + 1}.png`,
-    }))
-    setAllImages(generated)
+    // mock data placeholder – replace with real fetch if needed
+    setImages([
+      { id: "1", url: "/generated" },
+      { id: "2", url: "/generated" },
+      { id: "3", url: "/generated" },
+      { id: "4", url: "/generated" },
+      { id: "5", url: "/generated" },
+    ])
+    setLoading(false)
   }, [])
 
-  function loadMore() {
-    setVisibleCount((v) => v + PAGE_SIZE)
-  }
-
-  function deleteImage(id: string) {
-    if (!confirm("Delete this image?")) return
-    setAllImages((prev) => prev.filter((img) => img.id !== id))
-  }
-
-  function remixImage(image: ImageItem) {
-    const remix: ImageItem = {
-      id: crypto.randomUUID(),
-      src: image.src,
-      isVariation: true,
-    }
-
-    // Add remix to top
-    setAllImages((prev) => [remix, ...prev])
-  }
-
-  function handleDownload() {
-    alert("Upgrade required to download images")
-  }
-
-  // Infinite scroll
-  useEffect(() => {
-    function onScroll() {
-      const nearBottom =
-        window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 300
-
-      if (nearBottom) loadMore()
-    }
-
-    window.addEventListener("scroll", onScroll)
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  const images = allImages.slice(0, visibleCount)
-
-  if (images.length === 0) {
-    return (
-      <div className="text-center text-zinc-400 mt-8">
-        No images yet
-      </div>
-    )
+  if (loading) {
+    return <p className="text-center text-zinc-500">Loading images…</p>
   }
 
   return (
-    <>
-      <div className="grid grid-cols-2 gap-3">
-        {images.map((img) => (
-          <div
-            key={img.id}
-            className="relative bg-zinc-900 rounded overflow-hidden"
-          >
-            {/* IMAGE */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
+      {images.map((img) => (
+        <div
+          key={img.id}
+          className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden"
+        >
+          {/* IMAGE */}
+          <div className="relative">
             <img
-              src={img.src}
-              alt="generated"
-              className={`w-full ${isFree ? "opacity-60" : ""}`}
+              src={img.url}
+              alt="Generated"
+              className="w-full aspect-square object-cover"
             />
 
-            {/* VARIATION BADGE */}
-            {img.isVariation && (
-              <div className="absolute top-1 left-1 bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded">
-                Remix
-              </div>
-            )}
-
-            {/* WATERMARK */}
             {isFree && (
-              <div className="absolute inset-0 flex items-center justify-center text-white text-xl font-bold opacity-70 pointer-events-none">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-medium">
                 Aiexor
               </div>
             )}
-
-            {/* ACTIONS */}
-            <div className="absolute bottom-1 right-1 flex gap-1">
-              <button
-                onClick={() => remixImage(img)}
-                className="bg-blue-600 text-white text-xs px-2 py-1 rounded"
-              >
-                Remix
-              </button>
-
-              <button
-                onClick={isFree ? handleDownload : undefined}
-                className="bg-black text-white text-xs px-2 py-1 rounded"
-              >
-                {isFree ? "Upgrade" : "Download"}
-              </button>
-
-              <button
-                onClick={() => deleteImage(img.id)}
-                className="bg-red-600 text-white text-xs px-2 py-1 rounded"
-              >
-                Delete
-              </button>
-            </div>
           </div>
-        ))}
-      </div>
 
-      {/* LOADING */}
-      {visibleCount < allImages.length && (
-        <div className="text-center text-zinc-500 text-sm my-4">
-          Loading more…
+          {/* ACTIONS */}
+          <div className="flex justify-between items-center px-3 py-2 text-xs text-zinc-400">
+            <button className="hover:text-white">Remix</button>
+
+            {isFree ? (
+              <button className="text-teal-400 hover:text-teal-300">
+                Upgrade
+              </button>
+            ) : (
+              <button className="hover:text-white">Download</button>
+            )}
+
+            <button className="hover:text-red-400">Delete</button>
+          </div>
         </div>
-      )}
-    </>
+      ))}
+    </div>
   )
 }
