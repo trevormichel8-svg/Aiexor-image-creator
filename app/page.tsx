@@ -67,7 +67,7 @@ export default function Page() {
         <div className="bg-zinc-900 p-6 rounded-lg w-[90%] max-w-sm text-center">
           <h2 className="text-lg font-bold mb-2">Upgrade Required</h2>
           <p className="text-sm text-gray-400 mb-4">
-            Remove watermarks and unlock more images.
+            Remove watermarks and unlock full-quality images.
           </p>
 
           <button
