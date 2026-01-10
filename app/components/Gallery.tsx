@@ -8,7 +8,15 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export default function Gallery({ userId }: { userId: string }) {
+export default function Gallery({
+  userId,
+  plan,
+  onUpgrade,
+}: {
+  userId: string
+  plan: string
+  onUpgrade: () => void
+}) {
   const [images, setImages] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeImage, setActiveImage] = useState<any | null>(null)
@@ -32,12 +40,14 @@ export default function Gallery({ userId }: { userId: string }) {
   function FullscreenViewer() {
     if (!activeImage) return null
 
+    const locked = plan === "free"
+
     return (
       <div className="fixed inset-0 bg-black z-50 flex flex-col">
         {/* HEADER */}
         <div className="p-3 flex justify-between items-center">
           <div className="text-sm text-gray-300">
-            {activeImage.plan === "free" ? "Free Preview" : "Full Quality"}
+            {locked ? "Preview Locked" : "Full Quality"}
           </div>
 
           <button
@@ -49,18 +59,34 @@ export default function Gallery({ userId }: { userId: string }) {
         </div>
 
         {/* IMAGE */}
-        <div className="flex-1 flex items-center justify-center p-2">
+        <div className="flex-1 flex items-center justify-center p-4">
           <img
             src={activeImage.image_url}
-            alt="Full view"
-            className="max-h-full max-w-full rounded"
+            alt="Preview"
+            className={`max-h-full max-w-full rounded ${
+              locked ? "blur-md opacity-60" : ""
+            }`}
           />
         </div>
 
         {/* FOOTER */}
-        <div className="p-3 text-center text-xs text-gray-400">
-          Long-press to save image
-        </div>
+        {locked ? (
+          <div className="p-4 text-center">
+            <p className="text-sm text-gray-300 mb-3">
+              Upgrade to download watermark-free images
+            </p>
+            <button
+              onClick={onUpgrade}
+              className="border border-teal-500 px-4 py-2 rounded"
+            >
+              Upgrade
+            </button>
+          </div>
+        ) : (
+          <div className="p-3 text-center text-xs text-gray-400">
+            Long-press to save image
+          </div>
+        )}
       </div>
     )
   }
@@ -96,12 +122,14 @@ export default function Gallery({ userId }: { userId: string }) {
               <img
                 src={img.image_url}
                 alt="Generated"
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover ${
+                  plan === "free" ? "blur-sm opacity-80" : ""
+                }`}
               />
 
-              {img.plan === "free" && (
-                <div className="absolute bottom-1 right-1 text-[10px] bg-black/60 px-1 rounded">
-                  Free
+              {plan === "free" && (
+                <div className="absolute inset-0 flex items-center justify-center text-xs bg-black/40">
+                  Locked
                 </div>
               )}
             </button>

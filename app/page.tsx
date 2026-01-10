@@ -67,7 +67,7 @@ export default function Page() {
         <div className="bg-zinc-900 p-6 rounded-lg w-[90%] max-w-sm text-center">
           <h2 className="text-lg font-bold mb-2">Upgrade Required</h2>
           <p className="text-sm text-gray-400 mb-4">
-            Remove watermarks and unlock full-quality images.
+            Unlock downloads and remove watermarks.
           </p>
 
           <button
@@ -129,7 +129,7 @@ export default function Page() {
         <>
           {plan === "free" && (
             <div className="mb-4 text-xs text-gray-400">
-              Free tier • 5 images/day • Watermarked previews
+              Free tier • Watermarked • Downloads locked
             </div>
           )}
 
@@ -138,7 +138,11 @@ export default function Page() {
             onOutOfCredits={() => setShowUpgrade(true)}
           />
 
-          <Gallery userId={user.id} />
+          <Gallery
+            userId={user.id}
+            plan={plan}
+            onUpgrade={() => setShowUpgrade(true)}
+          />
 
           <button
             onClick={() => setShowUpgrade(true)}
