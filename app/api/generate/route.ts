@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import OpenAI from "openai"
-import sharp from "sharp"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
