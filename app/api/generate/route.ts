@@ -82,7 +82,7 @@ export async function POST(req: Request) {
         </svg>`
       )
 
-      imageBuffer = await sharp(imageBuffer)
+      imageBuffer = await (imageBuffer)
         .composite([{ input: watermark, gravity: "southeast" }])
         .png()
         .toBuffer()
