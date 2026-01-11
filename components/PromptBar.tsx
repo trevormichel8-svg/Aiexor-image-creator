@@ -1,69 +1,43 @@
 "use client"
 
-interface PromptBarProps {
-  prompt: string
-  setPrompt: (v: string) => void
-  onGenerate: () => void
-}
+import { useState } from "react"
 
 export default function PromptBar({
-  prompt,
-  setPrompt,
   onGenerate,
-}: PromptBarProps) {
+}: {
+  onGenerate: (prompt: string) => void
+}) {
+  const [prompt, setPrompt] = useState("")
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background:
-          "linear-gradient(to top, rgba(11,11,15,0.98), rgba(11,11,15,0.7))",
-        padding: "12px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 900,
-          margin: "0 auto",
-          display: "flex",
-          gap: 10,
-        }}
-      >
-        <input
+    <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0b1416]/90 backdrop-blur z-40">
+      <div className="max-w-3xl mx-auto flex gap-2">
+        <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe your image…"
-          style={{
-            flex: 1,
-            height: 52,
-            borderRadius: 999,
-            padding: "0 18px",
-            fontSize: 16,
-            background: "var(--bg-input)",
-            color: "var(--text-main)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 0 14px rgba(20,184,166,0.35)",
-          }}
+          rows={1}
+          placeholder="Describe the image you want to generate…"
+          className="
+            flex-1 resize-none rounded-2xl
+            bg-[#0e1b1f]
+            px-4 py-3
+            text-white placeholder-gray-400
+            border border-teal-500/30
+            focus:outline-none
+            focus:ring-2 focus:ring-teal-400/40
+            shadow-[0_0_12px_rgba(45,212,191,0.25)]
+          "
         />
 
         <button
-          onClick={onGenerate}
-          style={{
-            height: 52,
-            minWidth: 90,
-            padding: "0 18px",
-            borderRadius: 999,
-            background: "var(--accent)",
-            color: "#022c28",
-            fontWeight: 700,
-            border: "none",
-            boxShadow: "0 0 18px rgba(20,184,166,0.9)",
-            cursor: "pointer",
-          }}
+          onClick={() => onGenerate(prompt)}
+          className="
+            rounded-xl bg-teal-500 text-black px-4 py-3
+            shadow-[0_0_15px_rgba(45,212,191,0.6)]
+            hover:bg-teal-400 transition
+          "
         >
-          Go
+          Generate
         </button>
       </div>
     </div>
