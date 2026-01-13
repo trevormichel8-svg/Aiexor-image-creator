@@ -7,13 +7,7 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   glow?: boolean;
   size?: "default" | "sm" | "lg" | "iconSm" | "icon";
-  variant?:
-    | "primary"
-    | "secondary"
-    | "outline"
-    | "ghost"
-    | "destructive"
-    | "link";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "destructive" | "link";
   asChild?: boolean;
 }
 
@@ -57,15 +51,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         : "bg-primary text-primary-foreground";
 
     const glowClasses = glow
-      ? variant === "primary"
-        ? "shadow-[0_0_10px_hsl(var(--glow))] hover:shadow-[0_0_20px_hsl(var(--glow))]"
-        : variant === "secondary"
-        ? "shadow-[0_0_6px_hsl(var(--glow)/0.6)] hover:shadow-[0_0_12px_hsl(var(--glow)/0.8)]"
-        : variant === "outline" || variant === "ghost"
-        ? "hover:shadow-[0_0_10px_hsl(var(--glow)/0.4)]"
-        : variant === "destructive"
-        ? "shadow-[0_0_8px_hsl(var(--destructive)/0.5)] hover:shadow-[0_0_16px_hsl(var(--destructive)/0.8)]"
-        : ""
+      ? "shadow-[0_0_10px_hsl(var(--glow))] hover:shadow-[0_0_20px_hsl(var(--glow))]"
       : "";
 
     const disabledClasses = disabled
@@ -75,16 +61,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         ref={ref}
-        className={`
-          ${sizeClasses}
-          ${variantClasses}
-          ${glowClasses}
-          ${disabledClasses}
-          rounded-md
-          transition-all duration-300
-          focus:outline-none focus:ring-2 focus:ring-ring
-          ${className}
-        `}
+        className={`${sizeClasses} ${variantClasses} ${glowClasses} ${disabledClasses} rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring ${className}`}
         type={type}
         disabled={disabled}
         {...props}

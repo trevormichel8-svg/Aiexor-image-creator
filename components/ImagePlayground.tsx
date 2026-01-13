@@ -16,18 +16,14 @@ export default function ImagePlayground() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [showProviders, setShowProviders] = React.useState(false);
 
-  /** 🧠 Toggles visibility of provider info */
-  const toggleView = () => setShowProviders((prev) => !prev);
+  const toggleView = () => setShowProviders((p) => !p);
 
-  /** 🚀 Handles prompt submission */
   const handlePromptSubmit = async (newPrompt: string) => {
     if (!newPrompt.trim()) return;
-
     try {
       setIsLoading(true);
       setImages([]);
 
-      // Replace this with your real API route or image generator
       const response = await fetch("/api/generate-images", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -35,11 +31,10 @@ export default function ImagePlayground() {
       });
 
       if (!response.ok) throw new Error("Failed to generate images");
-
       const data = await response.json();
       setImages(data.images || []);
-    } catch (error) {
-      console.error("Error generating images:", error);
+    } catch (err) {
+      console.error("Error generating images:", err);
     } finally {
       setIsLoading(false);
     }
@@ -47,11 +42,8 @@ export default function ImagePlayground() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
-      {/* Header */}
       <Header />
-
       <main className="flex flex-col flex-1 items-center justify-start px-4 py-8 gap-6">
-        {/* Prompt input box */}
         <PromptInput
           onSubmit={handlePromptSubmit}
           isLoading={isLoading}
@@ -59,22 +51,17 @@ export default function ImagePlayground() {
           onToggleProviders={toggleView}
         />
 
-        {/* Loading spinner */}
         {isLoading && (
           <div className="flex items-center justify-center mt-8">
-            <Loader2
-              className="animate-spin text-[hsl(var(--glow))]"
-              size={48}
-            />
+            <Loader2 className="animate-spin text-[hsl(var(--glow))]" size={48} />
           </div>
         )}
 
-        {/* Image grid */}
         {!isLoading && images.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-            {images.map((img, idx) => (
+            {images.map((img, i) => (
               <ImageDisplay
-                key={idx}
+                key={i}
                 image={img.url}
                 provider={img.provider}
                 showProvider={showProviders}
@@ -83,7 +70,6 @@ export default function ImagePlayground() {
           </div>
         )}
 
-        {/* Empty state */}
         {!isLoading && images.length === 0 && (
           <p className="text-neutral-400 mt-8">
             Enter a prompt above to generate your first image.
