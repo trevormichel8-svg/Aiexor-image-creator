@@ -27,7 +27,7 @@ export default function ImagePlayground() {
       setIsLoading(true);
       setImages([]);
 
-      // Replace with your API call or image generation logic
+      // Replace this with your real API route or image generator
       const response = await fetch("/api/generate-images", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,9 +44,6 @@ export default function ImagePlayground() {
       setIsLoading(false);
     }
   };
-
-  /** 🧹 Clears all generated images */
-  const handleClear = () => setImages([]);
 
   return (
     <div className="flex flex-col min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
@@ -65,7 +62,10 @@ export default function ImagePlayground() {
         {/* Loading spinner */}
         {isLoading && (
           <div className="flex items-center justify-center mt-8">
-            <Loader2 className="animate-spin text-[hsl(var(--glow))]" size={48} />
+            <Loader2
+              className="animate-spin text-[hsl(var(--glow))]"
+              size={48}
+            />
           </div>
         )}
 
@@ -83,7 +83,7 @@ export default function ImagePlayground() {
           </div>
         )}
 
-        {/* No images yet */}
+        {/* Empty state */}
         {!isLoading && images.length === 0 && (
           <p className="text-neutral-400 mt-8">
             Enter a prompt above to generate your first image.
