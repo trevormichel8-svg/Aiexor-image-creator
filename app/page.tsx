@@ -1,4 +1,4 @@
-import { ImagePlayground } from "@/components/ImagePlayground";
+import   ImagePlayground  from "@/components/ImagePlayground";
 import { getRandomSuggestions } from "@/lib/suggestions";
 
 export const dynamic = "force-dynamic";
