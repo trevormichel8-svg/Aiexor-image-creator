@@ -1,141 +1,95 @@
 "use client";
 
-import { useState } from "react";
-import { ModelSelect } from "@/components/ModelSelect";
+import * as React from "react";
 import { PromptInput } from "@/components/PromptInput";
-import { ModelCardCarousel } from "@/components/ModelCardCarousel";
-import {
-  MODEL_CONFIGS,
-  PROVIDERS,
-  PROVIDER_ORDER,
-  ProviderKey,
-  ModelMode,
-  initializeProviderRecord,
-} from "@/lib/provider-config";
-import { Suggestion } from "@/lib/suggestions";
-import { useImageGeneration } from "@/hooks/use-image-generation";
-import { Header } from "./Header";
+import { ImageDisplay } from "@/components/ImageDisplay";
+import { Header } from "@/components/Header";
+import { Loader2 } from "lucide-react";
 
-export function ImagePlayground({
-  suggestions,
-}: {
-  suggestions: Suggestion[];
-}) {
-  const {
-    images,
-    timings,
-    failedProviders,
-    isLoading,
-    startGeneration,
-    activePrompt,
-  } = useImageGeneration();
+interface ImageData {
+  url: string;
+  provider: string;
+}
 
-  const [showProviders, setShowProviders] = useState(true);
-  const [selectedModels, setSelectedModels] = useState<
-    Record<ProviderKey, string>
-  >(MODEL_CONFIGS.performance);
-  const [enabledProviders, setEnabledProviders] = useState(
-    initializeProviderRecord(true),
-  );
-  const [mode, setMode] = useState<ModelMode>("performance");
-  const toggleView = () => {
-    setShowProviders((prev) => !prev);
-  };
+export default function ImagePlayground() {
+  const [images, setImages] = React.useState<ImageData[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [showProviders, setShowProviders] = React.useState(false);
 
-  const handleModeChange = (newMode: ModelMode) => {
-    setMode(newMode);
-    setSelectedModels(MODEL_CONFIGS[newMode]);
-    setShowProviders(true);
-  };
+  /** 🧠 Toggles visibility of provider info */
+  const toggleView = () => setShowProviders((prev) => !prev);
 
-  const handleModelChange = (providerKey: ProviderKey, model: string) => {
-    setSelectedModels((prev) => ({ ...prev, [providerKey]: model }));
-  };
+  /** 🚀 Handles prompt submission */
+  const handlePromptSubmit = async (newPrompt: string) => {
+    if (!newPrompt.trim()) return;
 
-  const handleProviderToggle = (provider: string, enabled: boolean) => {
-    setEnabledProviders((prev) => ({
-      ...prev,
-      [provider]: enabled,
-    }));
-  };
+    try {
+      setIsLoading(true);
+      setImages([]);
 
-  const providerToModel = {
-    replicate: selectedModels.replicate,
-    vertex: selectedModels.vertex,
-    openai: selectedModels.openai,
-    fireworks: selectedModels.fireworks,
-  };
+      // Replace with your API call or image generation logic
+      const response = await fetch("/api/generate-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: newPrompt }),
+      });
 
-  const handlePromptSubmit = (newPrompt: string) => {
-    const activeProviders = PROVIDER_ORDER.filter((p) => enabledProviders[p]);
-    if (activeProviders.length > 0) {
-      startGeneration(newPrompt, activeProviders, providerToModel);
+      if (!response.ok) throw new Error("Failed to generate images");
+
+      const data = await response.json();
+      setImages(data.images || []);
+    } catch (error) {
+      console.error("Error generating images:", error);
+    } finally {
+      setIsLoading(false);
     }
-    setShowProviders(false);
   };
+
+  /** 🧹 Clears all generated images */
+  const handleClear = () => setImages([]);
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <Header />
+    <div className="flex flex-col min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
+      {/* Header */}
+      <Header />
+
+      <main className="flex flex-col flex-1 items-center justify-start px-4 py-8 gap-6">
+        {/* Prompt input box */}
         <PromptInput
           onSubmit={handlePromptSubmit}
           isLoading={isLoading}
           showProviders={showProviders}
           onToggleProviders={toggleView}
-          mode={mode}
-          onModeChange={handleModeChange}
-          suggestions={suggestions}
         />
-        <>
-          {(() => {
-            const getModelProps = () =>
-              (Object.keys(PROVIDERS) as ProviderKey[]).map((key) => {
-                const provider = PROVIDERS[key];
-                const imageItem = images.find((img) => img.provider === key);
-                const imageData = imageItem?.image;
-                const modelId = imageItem?.modelId ?? "N/A";
-                const timing = timings[key];
 
-                return {
-                  label: provider.displayName,
-                  models: provider.models,
-                  value: selectedModels[key],
-                  providerKey: key,
-                  onChange: (model: string, providerKey: ProviderKey) =>
-                    handleModelChange(providerKey, model),
-                  iconPath: provider.iconPath,
-                  color: provider.color,
-                  enabled: enabledProviders[key],
-                  onToggle: (enabled: boolean) =>
-                    handleProviderToggle(key, enabled),
-                  image: imageData,
-                  modelId,
-                  timing,
-                  failed: failedProviders.includes(key),
-                };
-              });
+        {/* Loading spinner */}
+        {isLoading && (
+          <div className="flex items-center justify-center mt-8">
+            <Loader2 className="animate-spin text-[hsl(var(--glow))]" size={48} />
+          </div>
+        )}
 
-            return (
-              <>
-                <div className="md:hidden">
-                  <ModelCardCarousel models={getModelProps()} />
-                </div>
-                <div className="hidden md:grid md:grid-cols-2 2xl:grid-cols-4 gap-8">
-                  {getModelProps().map((props) => (
-                    <ModelSelect key={props.label} {...props} />
-                  ))}
-                </div>
-                {activePrompt && activePrompt.length > 0 && (
-                  <div className="text-center mt-4 text-muted-foreground">
-                    {activePrompt}
-                  </div>
-                )}
-              </>
-            );
-          })()}
-        </>
-      </div>
+        {/* Image grid */}
+        {!isLoading && images.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+            {images.map((img, idx) => (
+              <ImageDisplay
+                key={idx}
+                image={img.url}
+                provider={img.provider}
+                showProvider={showProviders}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* No images yet */}
+        {!isLoading && images.length === 0 && (
+          <p className="text-neutral-400 mt-8">
+            Enter a prompt above to generate your first image.
+          </p>
+        )}
+      </main>
     </div>
   );
 }
