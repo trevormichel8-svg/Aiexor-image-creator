@@ -1,12 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Slot } from "@radix-ui/react-slot"; // Safe for use even if not used now
+import { Slot } from "@radix-ui/react-slot";
 
-/**
- * ButtonProps — future-proofed for Next.js & TypeScript
- * Handles refs, variants, sizes, and common shadcn/asChild patterns
- */
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   glow?: boolean;
@@ -21,10 +17,6 @@ export interface ButtonProps
   asChild?: boolean;
 }
 
-/**
- * Final neon-glow button component
- * Compatible with any parent wrapper, supports ref forwarding and variants
- */
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -42,7 +34,6 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const Comp = asChild ? Slot : "button";
 
-    /** 🎨 Size Variants */
     const sizeClasses =
       size === "sm"
         ? "px-2 py-1 text-sm"
@@ -52,7 +43,6 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ? "p-2"
         : "px-4 py-2";
 
-    /** 💎 Color + Style Variants */
     const variantClasses =
       variant === "secondary"
         ? "bg-secondary text-secondary-foreground border border-border"
@@ -64,9 +54,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ? "bg-destructive text-destructive-foreground"
         : variant === "link"
         ? "bg-transparent underline text-primary hover:text-secondary"
-        : "bg-primary text-primary-foreground"; // default primary
+        : "bg-primary text-primary-foreground";
 
-    /** ⚡ Glow + Animation Intensity */
     const glowClasses = glow
       ? variant === "primary"
         ? "shadow-[0_0_10px_hsl(var(--glow))] hover:shadow-[0_0_20px_hsl(var(--glow))]"
@@ -79,7 +68,6 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         : ""
       : "";
 
-    /** 🧱 Disabled State Styling */
     const disabledClasses = disabled
       ? "opacity-50 cursor-not-allowed hover:shadow-none"
       : "";

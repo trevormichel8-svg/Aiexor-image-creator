@@ -6,7 +6,7 @@
   :root {
     /* Base colors */
     --background: 0 0% 0%; /* black */
-    --foreground: 0 0% 100%; /* white */
+    --foreground: 0 0% 100%; /* grey */
 
     /* Accent colors (teal/neon) */
     --primary: 172 80% 55%; /* teal */
@@ -23,7 +23,8 @@
     --card: 0 0% 8%;
     --card-foreground: 0 0% 100%;
     --input: 0 0% 12%;
-
+    --input-background: 0 0% 25%;
+    
     /* Glow effect */
     --glow: 172 90% 60%;
   }
