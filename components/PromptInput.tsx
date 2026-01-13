@@ -10,9 +10,6 @@ export interface PromptInputProps {
   isLoading?: boolean;
   showProviders?: boolean;
   onToggleProviders?: () => void;
-  mode?: string;
-  onModeChange?: (mode: string) => void;
-  suggestions?: { text: string }[];
 }
 
 export function PromptInput({
@@ -22,9 +19,6 @@ export function PromptInput({
   isLoading = false,
   showProviders = false,
   onToggleProviders,
-  mode,
-  onModeChange,
-  suggestions = [],
 }: PromptInputProps) {
   const [prompt, setPrompt] = React.useState("");
 
@@ -111,4 +105,3 @@ export function PromptInput({
     </div>
   );
 }
-
