@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { PromptInput } from "@/components/PromptInput";
-import { ImageDisplay, ImageDisplayProps } from "@/components/ImageDisplay";
+import { ImageDisplay } from "@/components/ImageDisplay";
 import { Header } from "@/components/Header";
 import { Loader2 } from "lucide-react";
 

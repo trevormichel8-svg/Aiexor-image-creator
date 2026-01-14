@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Download, Share2 } from "lucide-react";
 
@@ -27,7 +28,13 @@ export function ImageDisplay({ image, provider, showProvider }: ImageDisplayProp
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-[hsl(var(--glow))] shadow-[0_0_10px_hsl(var(--glow)/0.5)] bg-black">
-      <img src={image} alt="Generated" className="w-full h-auto object-cover" />
+      <Image
+        src={image}
+        alt="Generated"
+        width={600}
+        height={400}
+        className="w-full h-auto object-cover"
+      />
       <div className="absolute bottom-2 left-2 flex gap-2">
         <Button
           size="icon"
