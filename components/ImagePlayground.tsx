@@ -27,7 +27,7 @@ export default function ImagePlayground() {
       const requestBody = {
         prompt,
         provider: "openai", // default provider
-        modelId: "dall-e-2", // default model; change as desired
+        modelId: "gpt-image-1", // default model; change as desired
       };
       const res = await fetch("/api/generate-images", {
         method: "POST",
