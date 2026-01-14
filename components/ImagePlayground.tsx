@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { PromptInput } from "@/components/PromptInput";
-import { ImageDisplay } from "@/components/ImageDisplay";
+import { ImageDisplay, ImageDisplayProps } from "@/components/ImageDisplay";
 import { Header } from "@/components/Header";
 import { Loader2 } from "lucide-react";
 
@@ -20,30 +20,17 @@ export default function ImagePlayground() {
 
   const handlePromptSubmit = async (newPrompt: string) => {
     if (!newPrompt.trim()) return;
-    try {
-      setIsLoading(true);
-      setImages([]);
-
-      const response = await fetch("/api/generate-images", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: newPrompt }),
-      });
-
-      if (!response.ok) throw new Error("Failed to generate images");
-      const data = await response.json();
-      setImages(data.images || []);
-    } catch (err) {
-      console.error("Error generating images:", err);
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(true);
+    const res = await fetch("/api/generate-images", { method: "POST" });
+    const data = await res.json();
+    setImages(data.images);
+    setIsLoading(false);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-[hsl(var(--background))] text-[hsl(var(--foreground))]">
       <Header />
-      <main className="flex flex-col flex-1 items-center justify-start px-4 py-8 gap-6">
+      <main className="flex flex-col flex-1 items-center px-4 py-8 gap-6">
         <PromptInput
           onSubmit={handlePromptSubmit}
           isLoading={isLoading}
@@ -68,12 +55,6 @@ export default function ImagePlayground() {
               />
             ))}
           </div>
-        )}
-
-        {!isLoading && images.length === 0 && (
-          <p className="text-neutral-400 mt-8">
-            Enter a prompt above to generate your first image.
-          </p>
         )}
       </main>
     </div>
