@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import * as React from "react";
 import {
   Carousel,
   CarouselApi,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/carousel";
 import { ImageDisplay } from "./ImageDisplay";
 import { cn } from "@/lib/utils";
-import { ProviderKey } from "@/lib/provider-config";
+  import { ProviderKey } from "@/lib/provider-config";
 import { GeneratedImage, ProviderTiming } from "@/lib/image-types";
 
 interface ImageCarouselProps {
@@ -31,10 +31,10 @@ export function ImageCarousel({
   enabledProviders,
   providerToModel,
 }: ImageCarouselProps) {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [api, setApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = React.useState(0);
+  const [api, setApi] = React.useState<CarouselApi>();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!api) return;
 
     api.on("select", () => {

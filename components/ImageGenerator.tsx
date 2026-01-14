@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, ChevronDown, Settings } from "lucide-react";
 import {
@@ -5,7 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
+  import { Button } from "@/components/ui/button";
 import { ImageDisplay } from "./ImageDisplay";
 import { ImageCarousel } from "@/components/ImageCarousel";
 import { GeneratedImage, ImageError, ProviderTiming } from "@/lib/image-types";

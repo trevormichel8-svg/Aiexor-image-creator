@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   Carousel,
   CarouselApi,
@@ -57,9 +58,9 @@ export function ModelCardCarousel({ models }: ModelCardCarouselProps) {
     };
 
     api.on("select", onSelect);
+    // Clean up by unsubscribing when the component is unmounted or API changes
     return () => {
       api.off("select", onSelect);
-      return;
     };
   }, [api]);
 

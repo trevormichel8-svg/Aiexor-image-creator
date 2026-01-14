@@ -1,4 +1,3 @@
-
 export const FireworksIcon = ({ size = 16 }) => {
   return (
     <svg

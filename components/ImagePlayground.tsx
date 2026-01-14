@@ -19,12 +19,36 @@ export default function ImagePlayground() {
   const toggleView = () => setShowProviders((p) => !p);
 
   const handlePromptSubmit = async (newPrompt: string) => {
-    if (!newPrompt.trim()) return;
+    const prompt = newPrompt.trim();
+    if (!prompt) return;
     setIsLoading(true);
-    const res = await fetch("/api/generate-images", { method: "POST" });
-    const data = await res.json();
-    setImages(data.images);
-    setIsLoading(false);
+    try {
+      // For this playground we generate a single image using OpenAI's DALL·E 2 model.
+      const requestBody = {
+        prompt,
+        provider: "openai", // default provider
+        modelId: "dall-e-2", // default model; change as desired
+      };
+      const res = await fetch("/api/generate-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+      const data = await res.json();
+      if (res.ok && data.image) {
+        // Prepend the data URI scheme to the returned base64 string
+        const imageUrl = `data:image/png;base64,${data.image}`;
+        setImages([{ url: imageUrl, provider: data.provider }]);
+      } else {
+        console.error("Error generating image", data.error);
+        setImages([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setImages([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
