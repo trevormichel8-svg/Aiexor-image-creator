@@ -50,6 +50,7 @@ export function ImageCarousel({
             const imageData = images?.find(
               (img) => img.provider === provider,
             )?.image;
+
             const timing = timings[provider];
 
             return (
@@ -60,7 +61,7 @@ export function ImageCarousel({
                     providerToModel[provider]
                   }
                   provider={provider}
-                  image={imageData}
+                  image={imageData ?? ""}
                   timing={timing}
                   failed={failedProviders.includes(provider)}
                   enabled={enabledProviders[provider]}
