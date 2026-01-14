@@ -13,9 +13,13 @@
     "jsx": "preserve",
     "incremental": true,
     "target": "ES2017",
+    "useUnknownInCatchVariables": false,
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "plugins": [
+      { "name": "next" }
+    ]
   },
   "include": [
     "next-env.d.ts",
