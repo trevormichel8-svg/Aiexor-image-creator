@@ -5,20 +5,14 @@ export interface Suggestion {
 
 const artStyles = ["anime", "art nouveau", "ukiyo-e", "watercolor"];
 
-const basePrompts: { text: string; prompt: string }[] = [
-  {
-    text: "Salamander Dusk",
-    prompt: "A salamander at dusk in a forest pond",
-  },
+const basePrompts: Suggestion[] = [
+  { text: "Salamander Dusk", prompt: "A salamander at dusk in a forest pond" },
   {
     text: "Sultry Chicken",
     prompt:
       "A sultry chicken peering around the corner from shadows, clearly up to no good",
   },
-  {
-    text: "Cat Vercel",
-    prompt: "A cat launching its website on Vercel",
-  },
+  { text: "Cat Vercel", prompt: "A cat launching its website on Vercel" },
   {
     text: "Red Panda",
     prompt:
@@ -53,7 +47,8 @@ const basePrompts: { text: string; prompt: string }[] = [
   },
   {
     text: "Penguin Delight",
-    prompt: "A penguin in pajamas eating ice cream while watching television",
+    prompt:
+      "A penguin in pajamas eating ice cream while watching television",
   },
   {
     text: "Echidna Library",
@@ -116,6 +111,7 @@ const basePrompts: { text: string; prompt: string }[] = [
   },
 ];
 
+/* Utility */
 function shuffle<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -125,6 +121,12 @@ function shuffle<T>(array: T[]): T[] {
   return shuffled;
 }
 
+/* ✅ EXPORT USED BY UI */
+export const suggestions: string[] = basePrompts.map(
+  (item) => item.prompt
+);
+
+/* Optional advanced usage */
 export function getRandomSuggestions(count: number = 5): Suggestion[] {
   const shuffledPrompts = shuffle(basePrompts);
   const shuffledStyles = shuffle(artStyles);

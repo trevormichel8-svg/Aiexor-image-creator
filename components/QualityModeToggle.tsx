@@ -1,57 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { Zap, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-
-export type QualityMode = "performance" | "quality";
+import { Zap, Sparkles } from "lucide-react";
 
 interface QualityModeToggleProps {
-  value: QualityMode;
-  onValueChange: (value: QualityMode) => void;
-  disabled?: boolean;
+  _value?: boolean;
 }
 
-export function QualityModeToggle({
-  onValueChange,
-  disabled = false,
-}: QualityModeToggleProps) {
-  const { toast } = useToast();
+export function QualityModeToggle({ _value }: QualityModeToggleProps) {
+  const [enabled, setEnabled] = React.useState(false);
 
   return (
-    <div className="flex flex-col items-center gap-2 min-w-[240px]">
-      <div className="flex gap-2">
-        <Button
-          variant="secondary"
-          disabled={disabled}
-          onClick={() => {
-            onValueChange("performance");
-            toast({
-              description: "Switching to faster models for quicker generation",
-              duration: 2000,
-            });
-          }}
-        >
-          <Zap className="h-4 w-4 mr-2" />
-          Performance
-        </Button>
-        <Button
-          variant="secondary"
-          disabled={disabled}
-          onClick={() => {
-            onValueChange("quality");
-            toast({
-              description:
-                "Switching to higher quality models for better results",
-              duration: 2000,
-            });
-          }}
-        >
-          <Sparkles className="h-4 w-4 mr-2" />
-          Quality
-        </Button>
-      </div>
-    </div>
+    <Button
+      variant="outline"
+      onClick={() => setEnabled((v) => !v)}
+      className="flex gap-2"
+    >
+      {enabled ? <Sparkles /> : <Zap />}
+      {enabled ? "High Quality" : "Fast"}
+    </Button>
   );
 }

@@ -8,9 +8,7 @@ interface PromptSuggestionsProps {
   onSelect: (prompt: string) => void;
 }
 
-export function PromptSuggestions({
-  onSelect,
-}: PromptSuggestionsProps) {
+export function PromptSuggestions({ onSelect }: PromptSuggestionsProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {suggestions.map((suggestion) => (

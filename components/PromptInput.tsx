@@ -2,60 +2,30 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-export interface PromptInputProps {
-  onSubmit?: (prompt: string) => void;
-  isLoading?: boolean;
-  showProviders?: boolean;
-  onToggleProviders?: () => void;
+interface PromptInputProps {
+  _prompt?: string;
+  onSubmit: (prompt: string) => void;
 }
 
-export function PromptInput({
-  onSubmit,
-  isLoading = false,
-  showProviders = false,
-  onToggleProviders,
-}: PromptInputProps) {
-  const [prompt, setPrompt] = React.useState("");
-
-  const handleSubmit = () => {
-    if (onSubmit) onSubmit(prompt);
-  };
+export function PromptInput({ _prompt, onSubmit }: PromptInputProps) {
+  const [value, setValue] = React.useState("");
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch gap-3 bg-neutral-800/80 p-4 rounded-xl border border-[hsl(var(--border))] shadow-[0_0_12px_hsl(var(--glow)/0.4)]">
-      <textarea
-        placeholder="Describe your image prompt..."
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        className="flex-1 bg-neutral-700 text-white placeholder:text-neutral-400 p-3 rounded-lg border border-[hsl(var(--border))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--glow))] resize-none min-h-[100px]"
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(value);
+      }}
+      className="flex gap-2"
+    >
+      <Input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Enter a prompt"
       />
-
-      <div className="flex sm:flex-col gap-2 justify-center">
-        <Button
-          onClick={handleSubmit}
-          disabled={isLoading}
-          className="bg-black text-white border border-[hsl(var(--glow))] hover:shadow-[0_0_15px_hsl(var(--glow))] hover:border-[hsl(var(--glow))] rounded-full transition-all duration-300 px-5 py-2"
-        >
-          {isLoading ? "Generating..." : "Generate"}
-        </Button>
-
-        <Button
-          onClick={() => setPrompt("")}
-          className="bg-black text-white border border-[hsl(var(--glow))] hover:shadow-[0_0_15px_hsl(var(--glow))] hover:border-[hsl(var(--glow))] rounded-full transition-all duration-300 px-5 py-2"
-        >
-          Clear
-        </Button>
-
-        {onToggleProviders && (
-          <Button
-            onClick={onToggleProviders}
-            className="bg-black text-white border border-[hsl(var(--glow))] hover:shadow-[0_0_15px_hsl(var(--glow))] rounded-full transition-all duration-300 px-5 py-2"
-          >
-            {showProviders ? "Hide Providers" : "Show Providers"}
-          </Button>
-        )}
-      </div>
-    </div>
+      <Button type="submit">Generate</Button>
+    </form>
   );
 }
