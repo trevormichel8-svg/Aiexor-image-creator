@@ -110,6 +110,16 @@ export default function StudioPage() {
   const [prompt, setPrompt] = useState("");
   const [provider, setProvider] = useState<Provider>("openai");
   const [styleOpen, setStyleOpen] = useState(false);
+
+useEffect(() => {
+  if (!styleOpen) return;
+  const prev = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+  return () => {
+    document.body.style.overflow = prev;
+  };
+}, [styleOpen]);
+
   const [cards, setCards] = useState<OutputCard[]>([]);
   const [busy, setBusy] = useState(false);
   const [historyBusy, setHistoryBusy] = useState(false);
@@ -377,7 +387,11 @@ export default function StudioPage() {
         </div>
       </div>
 
-      <div id="style-menu" className={`style-menu ${styleOpen ? "open" : ""}`}>
+      
+      <div className={`sheet-backdrop ${styleOpen ? "open" : ""}`} onClick={() => setStyleOpen(false)} />
+<div id="style-menu" role="dialog" aria-modal="true" aria-label="Tools" className={`style-menu ${styleOpen ? "open" : ""}`}>
+        <div className="sheet-handle" aria-hidden="true" />
+
         <div className="style-menu-header">
           <div className="style-menu-title">Styles</div>
           <button type="button" className="icon-button" aria-label="Close styles" onClick={() => setStyleOpen(false)}>
@@ -405,7 +419,7 @@ export default function StudioPage() {
       </div>
 
       <form
-        className="prompt-bar"
+        className="prompt-container"
         id="prompt-form"
         autoComplete="off"
         onSubmit={(e) => {
