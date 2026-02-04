@@ -1,7 +1,7 @@
 /*
   Global styles for the AI image generator app.
   The goal of this stylesheet is to mirror the layout of the ChatGPT mobile UI
-  shown in the provided screenshot, with white accents and a neon shadow on
+  shown in the provided screenshot, with white accentsand a neon shadow on
   actionable elements like buttons, pills and the prompt bar. The dark theme
   preserves high contrast against the neon green shadow.
 */
@@ -168,8 +168,10 @@ body {
 .icon-button {
   background-color: var(--surface-color);
   border: none;
-  border-radius: var(--radius-pill);
-  padding: 0.5rem;
+  border-radius: 9999px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -178,6 +180,7 @@ body {
   cursor: pointer;
   transition: background-color 0.2s;
 }
+
 .icon-button svg {
   width: 20px;
   height: 20px;
@@ -276,8 +279,10 @@ body {
 .prompt-bar .plus-btn {
   background-color: var(--surface-color);
   border: none;
-  border-radius: var(--radius-pill);
-  padding: 0.5rem;
+  border-radius: 9999px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -287,6 +292,7 @@ body {
   margin-right: 0.5rem;
   transition: background-color 0.2s;
 }
+
 .prompt-bar .plus-btn:hover {
   background-color: var(--bg-color);
 }
@@ -513,13 +519,13 @@ body {
    near the bottom right of the card and allow remixing or downloading
    the individual image. */
 .image-controls {
-  position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
+  position: static;
   display: flex;
   gap: 0.4rem;
-  z-index: 2;
+  justify-content: flex-end;
+  padding-top: 0.6rem;
 }
+
 
 /* Base styles for the per-image action buttons */
 .image-remix-btn,
@@ -1100,33 +1106,46 @@ body {
    =========================== */
 
 .prompt-container {
+  /* 1. LAYOUT & CENTERING */
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-  z-index: 60;
+  margin: 0 auto;           /* Centers fixed elements with a width */
+  width: 92%;               /* Fluid width for mobile */
+  max-width: 600px;         /* Caps width for tablets/desktop */
+  box-sizing: border-box;   /* CRITICAL: includes padding in width calculation */
+  z-index: 100;
 
+  /* 2. CHATGPT POSITIONING */
+  bottom: 0;                /* Aligns to bottom edge */
+  /* Adds padding to handle iPhone notches and screen edges */
+  padding: 10px 14px calc(env(safe-area-inset-bottom, 20px) + 12px);
+
+  /* 3. FLEXBOX SETTINGS */
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
+  align-items: center;      /* Keeps buttons and input centered vertically */
+  gap: 8px;                 /* Slightly tighter gap for mobile */
 
-  margin: 0 auto;
-  padding: 10px 12px;
-
-  width: 92%;
-  max-width: 800px;
-
+  /* 4. VISUALS */
   background: rgba(10, 10, 10, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 26px;
-
-  box-shadow:
-    0 0 0 1px rgba(0, 255, 238, 0.08),
-    0 18px 46px rgba(0, 255, 238, 0.10);
-
+  border-radius: 26px;      /* ChatGPT uses ~24px to 28px */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
+
+/* 5. THE INPUT FIELD (Critical for the 'fit') */
+.prompt-input {
+  flex: 1;                  /* Forces the input to fill all empty space */
+  min-width: 0;             /* Prevents input from forcing container wide */
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;          /* Prevents auto-zoom on iOS focus */
+}
+
 
 .prompt-container .plus-btn,
 .prompt-container .icon-button,
@@ -1182,7 +1201,7 @@ body {
 
 /* Prevent content from being hidden under the fixed prompt bar */
 .content {
-  padding-bottom: 120px;
+  padding-bottom: 20px;
 }
 
 /* ===========================
@@ -1204,100 +1223,172 @@ body {
   pointer-events: auto;
 }
 
-.style-menu {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.prompt-container {
+  /* ChatGPT-like: sticky input docked above safe area */
+  position: sticky;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  z-index: 50;
+
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
 
   margin: 0 auto;
-  width: 100%;
-  max-width: 820px;
+  padding: 10px 12px;
 
-  padding: 10px 12px 18px;
+  /* Mobile-first: near-full width */
+  width: 92%;
 
-  background: rgba(10, 10, 10, 0.96);
-  border: 1px solid rgba(0, 255, 238, 0.16);
-  border-bottom: none;
-  border-radius: 22px 22px 0 0;
+  /* Match your dark + neon scheme but in a ChatGPT layout */
+  background: rgba(12, 12, 12, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 26px;
 
+  /* Subtle depth + glow (keeps your vibe, ChatGPT spacing) */
   box-shadow:
-    0 -10px 40px rgba(0, 255, 238, 0.10),
-    0 0 0 1px rgba(0, 255, 238, 0.08);
+    0 0 0 1px rgba(0, 255, 238, 0.08),
+    0 18px 46px rgba(0, 255, 238, 0.10);
 
-  transform: translateY(110%);
-  transition: transform 0.22s ease;
-  z-index: 80;
-
-  max-height: min(70vh, 520px);
-  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.style-menu.open {
-  transform: translateY(0);
+/* Desktop: fixed max-width like ChatGPT */
+@media (min-width: 768px) {
+  .prompt-container {
+    max-width: 800px;
+    width: 100%;
+  }
 }
 
-.sheet-handle {
-  width: 44px;
-  height: 5px;
-  border-radius: 999px;
-  margin: 6px auto 10px;
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.style-menu-header {
-  padding: 0.25rem 0.25rem 0.6rem;
-}
-
-.style-menu-grid {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0.25rem;
-  max-height: calc(min(70vh, 520px) - 80px);
-  overflow: auto;
-}
-
-/* Style pills keep the same scheme, just slightly roomier */
-.style-pill {
-  border: 1px solid rgba(0, 255, 238, 0.14);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-color);
-  padding: 0.65rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-}
-
-.style-pill:hover {
-  background: rgba(0, 255, 238, 0.10);
-}
-
-
-
-/* Prompt input (ChatGPT-like textarea) */
 .prompt-input {
-  flex-grow: 1;
+  flex: 1 1 auto;
   min-width: 0;
 
-  min-height: 24px;
-  max-height: 200px;
-  border: none;
-  outline: none;
+  /* ChatGPT-like textarea behavior */
+  min-height: 22px;
+  max-height: 180px;
+  overflow-y: auto;
+
+  border: 0;
+  outline: 0;
   background: transparent;
 
-  padding: 8px 12px;
+  padding: 10px 10px;
   font-size: 16px;
   line-height: 1.35;
 
-  resize: none;
-  overflow-y: auto;
-
   color: rgba(255, 255, 255, 0.92);
-  box-shadow: none;
-  margin: 0;
-  border-radius: 0;
+  resize: none;
+
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .prompt-input::placeholder {
   color: rgba(255, 255, 255, 0.42);
+}
+
+/* Make every button in the bar a fixed, tappable size (no clipping) */
+.prompt-container button,
+.prompt-container .icon-button,
+.prompt-container .plus-btn,
+.prompt-container .style-btn,
+.prompt-container .generate-btn {
+  flex: 0 0 auto;
+}
+
+/* ChatGPT-like icon button sizing */
+.prompt-container .icon-button,
+.prompt-container .plus-btn,
+.prompt-container .style-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+
+  box-shadow: 0 0 18px rgba(0, 255, 238, 0.10);
+}
+
+/* Send/Generate button: circular, slightly stronger glow */
+.prompt-container .generate-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(0, 255, 238, 0.22);
+  background: rgba(0, 255, 238, 0.12);
+
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 238, 0.08),
+    0 0 28px rgba(0, 255, 238, 0.18);
+}
+
+.prompt-container .generate-btn:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+/* If you have a provider/model select near the bar, keep it compact */
+.prompt-container select,
+.prompt-container .provider-select {
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 0 12px;
+}
+
+/* Dark mode: slightly stronger border (still subtle) */
+@media (prefers-color-scheme: dark) {
+  .prompt-container {
+    border-color: rgba(0, 255, 238, 0.16);
+  }
+
+}
+.image-like-btn {
+  background-color: var(--surface-color);
+  border: none;
+  border-radius: 9999px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--teal);
+  box-shadow: 0 0 6px var(--rainbow-shadow);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.image-like-btn.active {
+  color: var(--teal);
+  transform: scale(1.04);
+}
+
+
+
+.sidebar-section { margin-top: 14px; }
+.sidebar-section-title { font-size: 12px; letter-spacing: 0.16em; opacity: 0.7; margin-bottom: 10px; }
+.sidebar-label { display: block; font-size: 12px; opacity: 0.8; margin-bottom: 6px; }
+.sidebar-select {
+  width: 100%;
+  background-color: var(--surface-color);
+  border: none;
+  border-radius: 16px;
+  padding: 12px 12px;
+  color: inherit;
+  box-shadow: 0 0 6px var(--rainbow-shadow);
 }

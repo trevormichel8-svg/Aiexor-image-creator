@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-
-type Provider = "openai" | "vertex";
-type Tab = "studio" | "history";
+import { useProvider, type ProviderId } from "../providers/provider-context";
 
 type OutputCard = {
   key: string;
   historyId?: string;
   prompt: string;
-  provider: Provider;
+  provider: ProviderId;
   imageUrl?: string;
   status: "loading" | "ready" | "error";
   message?: string;
@@ -19,7 +17,7 @@ type OutputCard = {
 type HistoryItem = {
   id: string;
   prompt: string;
-  provider: Provider | string;
+  provider: ProviderId | string;
   image: string;
   createdAt: string;
 };
@@ -100,26 +98,18 @@ export default function StudioPage() {
       "Watercolor","Oil Painting","Acrylic","Ink Drawing","Charcoal","Pastel","Geometric","Kawaii","Retro",
       "Vintage","Psychedelic","Horror","Stencil","Indigenous","Coloring Book","Comic","Photo Realistic","Highly Detailed",
       "Silhouette","Mosaic","Realistic Anime","Vibrant","Epic Origami","Abstract Curves","CGI","Black&White","3D Shading",
-      "Quilling","Candy","Double Exposure","Kintsugi","Glass","Movie Poster","Filigree","Fractal","Holographic","Golder Ratio",
-      "Iridescent","Topography","Silver Nitrate","Embossed","Embroidery"
+      "Quilling","Candy","Double Exposure","Kintsugi","Glass","Movie Poster","Filigree","Fractal","Holographic","Golden Ratio",
+      "Iridescent","Topography","Silver Nitrate","Embossed","Embroidery","Smoke","Cloud","Chibi","Disney","Doodle","Airbrush",
+      "Glitchcore","Cinematic"
+      
     ],
     []
   );
 
   const [tab, setTab] = useState<Tab>("studio");
   const [prompt, setPrompt] = useState("");
-  const [provider, setProvider] = useState<Provider>("openai");
+  const { provider } = useProvider();
   const [styleOpen, setStyleOpen] = useState(false);
-
-useEffect(() => {
-  if (!styleOpen) return;
-  const prev = document.body.style.overflow;
-  document.body.style.overflow = "hidden";
-  return () => {
-    document.body.style.overflow = prev;
-  };
-}, [styleOpen]);
-
   const [cards, setCards] = useState<OutputCard[]>([]);
   const [busy, setBusy] = useState(false);
   const [historyBusy, setHistoryBusy] = useState(false);
@@ -144,7 +134,7 @@ useEffect(() => {
           key: g.id,
           historyId: g.id,
           prompt: g.prompt,
-          provider: (g.provider === "vertex" ? "vertex" : "openai") as Provider,
+          provider: (g.provider === "vertex" ? "vertex" : "openai") as ProviderId,
           imageUrl: g.image,
           status: "ready",
           createdAt: g.createdAt,
@@ -160,7 +150,7 @@ useEffect(() => {
     void fetchHistory();
   }, []);
 
-  async function callGenerate(p: string, prov: Provider) {
+  async function callGenerate(p: string, prov: ProviderId) {
     const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -188,7 +178,7 @@ useEffect(() => {
     return { images, generationId: json?.generationId as string | undefined };
   }
 
-  async function generateNew(p: string, prov: Provider) {
+  async function generateNew(p: string, prov: ProviderId) {
     const clean = p.trim();
     if (!clean) return;
 
@@ -387,11 +377,7 @@ useEffect(() => {
         </div>
       </div>
 
-      
-      <div className={`sheet-backdrop ${styleOpen ? "open" : ""}`} onClick={() => setStyleOpen(false)} />
-<div id="style-menu" role="dialog" aria-modal="true" aria-label="Tools" className={`style-menu ${styleOpen ? "open" : ""}`}>
-        <div className="sheet-handle" aria-hidden="true" />
-
+      <div id="style-menu" className={`style-menu ${styleOpen ? "open" : ""}`}>
         <div className="style-menu-header">
           <div className="style-menu-title">Styles</div>
           <button type="button" className="icon-button" aria-label="Close styles" onClick={() => setStyleOpen(false)}>
@@ -436,17 +422,6 @@ useEffect(() => {
         >
           <BrushIcon />
         </button>
-
-        <select
-          id="provider-select"
-          className="provider-select"
-          aria-label="Image model provider"
-          value={provider}
-          onChange={(e) => setProvider(e.target.value as Provider)}
-        >
-          <option value="openai">OpenAI</option>
-          <option value="vertex">Vertex AI</option>
-        </select>
 
         <textarea
           id="prompt-input"
